@@ -2,7 +2,7 @@
 # Add Telegram user IDs to appropriate permission levels
 
 admins:
-  # - 123456789  # Add admin user IDs here
+  - 1274011096  # Shean (@Dragonheart25)
 
 users:
   # - 987654321  # Add regular user IDs here
