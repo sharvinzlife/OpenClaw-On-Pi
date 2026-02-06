@@ -5,6 +5,8 @@ import os
 import sys
 import subprocess
 import shutil
+import time
+import threading
 from pathlib import Path
 from typing import Optional
 
@@ -16,13 +18,20 @@ class Colors:
     GREEN = '\033[92m'
     YELLOW = '\033[93m'
     RED = '\033[91m'
+    MAGENTA = '\033[35m'
     BOLD = '\033[1m'
     DIM = '\033[2m'
     UNDERLINE = '\033[4m'
     END = '\033[0m'
+    # Extended colors
+    ORANGE = '\033[38;5;208m'
+    CORAL = '\033[38;5;209m'
+    GOLD = '\033[38;5;220m'
+    PEACH = '\033[38;5;216m'
 
 # Emojis
 EMOJI = {
+    'lobster': '🦞',
     'robot': '🤖',
     'rocket': '🚀',
     'check': '✅',
@@ -47,6 +56,9 @@ EMOJI = {
     'brain': '🧠',
     'cloud': '☁️',
     'server': '🖥️',
+    'crown': '👑',
+    'heart': '❤️',
+    'globe': '🌐',
 }
 
 
@@ -55,37 +67,73 @@ def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
+def animate_text(text: str, delay: float = 0.02):
+    """Animate text character by character."""
+    for char in text:
+        sys.stdout.write(char)
+        sys.stdout.flush()
+        time.sleep(delay)
+    print()
+
+
+def loading_animation(message: str, duration: float = 1.5):
+    """Show a loading animation."""
+    frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+    end_time = time.time() + duration
+    i = 0
+    while time.time() < end_time:
+        sys.stdout.write(f'\r{Colors.ORANGE}{frames[i % len(frames)]}{Colors.END} {message}')
+        sys.stdout.flush()
+        time.sleep(0.08)
+        i += 1
+    sys.stdout.write('\r' + ' ' * (len(message) + 5) + '\r')
+    sys.stdout.flush()
+
+
 def print_banner():
-    """Print the OpenClaw banner."""
-    banner = f"""
-{Colors.CYAN}{Colors.BOLD}
-   ██████╗ ██████╗ ███████╗███╗   ██╗ ██████╗██╗      █████╗ ██╗    ██╗
-  ██╔═══██╗██╔══██╗██╔════╝████╗  ██║██╔════╝██║     ██╔══██╗██║    ██║
-  ██║   ██║██████╔╝█████╗  ██╔██╗ ██║██║     ██║     ███████║██║ █╗ ██║
-  ██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║██║     ██║     ██╔══██║██║███╗██║
-  ╚██████╔╝██║     ███████╗██║ ╚████║╚██████╗███████╗██║  ██║╚███╔███╔╝
-   ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝ ╚═════╝╚══════╝╚═╝  ╚═╝ ╚══╝╚══╝
-{Colors.END}
-{Colors.DIM}                    AI-Powered Telegram Bot{Colors.END}
-{Colors.YELLOW}        {EMOJI['brain']} Groq  {EMOJI['cloud']} Ollama Cloud  {EMOJI['server']} Local Ollama{Colors.END}
-"""
-    print(banner)
+    """Print the OpenClaw banner with animation."""
+    banner_lines = [
+        f"{Colors.ORANGE}{Colors.BOLD}",
+        "   ██████╗ ██████╗ ███████╗███╗   ██╗ ██████╗██╗      █████╗ ██╗    ██╗",
+        "  ██╔═══██╗██╔══██╗██╔════╝████╗  ██║██╔════╝██║     ██╔══██╗██║    ██║",
+        f"  ██║   ██║██████╔╝█████╗  ██╔██╗ ██║██║     ██║     ███████║██║ █╗ ██║",
+        "  ██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║██║     ██║     ██╔══██║██║███╗██║",
+        "  ╚██████╔╝██║     ███████╗██║ ╚████║╚██████╗███████╗██║  ██║╚███╔███╔╝",
+        "   ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝ ╚═════╝╚══════╝╚═╝  ╚═╝ ╚══╝╚══╝",
+        f"{Colors.END}",
+    ]
+    
+    for line in banner_lines:
+        print(line)
+        time.sleep(0.03)
+    
+    # Animated tagline
+    tagline = f"{Colors.DIM}                    AI-Powered Telegram Bot{Colors.END}"
+    print(tagline)
+    
+    # Provider icons with glow effect
+    providers = f"{Colors.GOLD}        {EMOJI['brain']} Groq  {EMOJI['cloud']} Ollama Cloud  {EMOJI['server']} Local Ollama{Colors.END}"
+    print(providers)
+    
+    # Animated separator
+    print(f"\n{Colors.ORANGE}{'━' * 60}{Colors.END}")
 
 
 def print_header(text: str):
-    """Print a section header."""
-    print(f"\n{Colors.CYAN}{Colors.BOLD}{'═' * 60}{Colors.END}")
-    print(f"{Colors.CYAN}{Colors.BOLD}  {text}{Colors.END}")
-    print(f"{Colors.CYAN}{Colors.BOLD}{'═' * 60}{Colors.END}\n")
+    """Print a section header with animation."""
+    print(f"\n{Colors.ORANGE}{Colors.BOLD}{'═' * 60}{Colors.END}")
+    animate_text(f"{Colors.ORANGE}{Colors.BOLD}  {text}{Colors.END}", 0.01)
+    print(f"{Colors.ORANGE}{Colors.BOLD}{'═' * 60}{Colors.END}\n")
 
 
 def print_step(step: int, total: int, text: str):
-    """Print a step indicator."""
-    print(f"{Colors.BLUE}[{step}/{total}]{Colors.END} {EMOJI['arrow']} {text}")
+    """Print a step indicator with animation."""
+    loading_animation(text, 0.3)
+    print(f"{Colors.ORANGE}[{step}/{total}]{Colors.END} {EMOJI['arrow']} {text}")
 
 
 def print_success(text: str):
-    """Print success message."""
+    """Print success message with animation."""
     print(f"{Colors.GREEN}{EMOJI['check']} {text}{Colors.END}")
 
 
@@ -105,16 +153,16 @@ def print_info(text: str):
 
 
 def print_menu_item(key: str, text: str, emoji: str = ''):
-    """Print a menu item."""
+    """Print a menu item with hover effect simulation."""
     emoji_str = f"{emoji} " if emoji else ""
-    print(f"  {Colors.CYAN}[{key}]{Colors.END} {emoji_str}{text}")
+    print(f"  {Colors.ORANGE}[{key}]{Colors.END} {emoji_str}{text}")
 
 
 def get_input(prompt: str, default: str = "") -> str:
     """Get user input with styled prompt."""
     default_str = f" {Colors.DIM}({default}){Colors.END}" if default else ""
     try:
-        value = input(f"{Colors.YELLOW}{EMOJI['arrow']}{Colors.END} {prompt}{default_str}: ").strip()
+        value = input(f"{Colors.ORANGE}{EMOJI['arrow']}{Colors.END} {prompt}{default_str}: ").strip()
         return value if value else default
     except (EOFError, KeyboardInterrupt):
         print()
@@ -125,7 +173,7 @@ def confirm(prompt: str, default: bool = True) -> bool:
     """Get yes/no confirmation."""
     default_str = "Y/n" if default else "y/N"
     try:
-        value = input(f"{Colors.YELLOW}{EMOJI['arrow']}{Colors.END} {prompt} [{default_str}]: ").strip().lower()
+        value = input(f"{Colors.ORANGE}{EMOJI['arrow']}{Colors.END} {prompt} [{default_str}]: ").strip().lower()
         if not value:
             return default
         return value in ('y', 'yes')
@@ -148,18 +196,28 @@ def check_config_exists() -> tuple[bool, Path]:
 
 
 def show_main_menu():
-    """Show the main menu."""
+    """Show the main menu with animations."""
     clear_screen()
     print_banner()
     
-    print(f"\n{Colors.BOLD}  What would you like to do?{Colors.END}\n")
-    print_menu_item("1", "Start the bot", EMOJI['rocket'])
-    print_menu_item("2", "Configure API keys", EMOJI['key'])
-    print_menu_item("3", "Edit permissions", EMOJI['lock'])
-    print_menu_item("4", "Check status", EMOJI['gear'])
-    print_menu_item("5", "Run tests", EMOJI['check'])
-    print_menu_item("6", "Start dashboard only", EMOJI['link'])
-    print_menu_item("q", "Quit", "")
+    print(f"\n{Colors.BOLD}  {EMOJI['lobster']} What would you like to do?{Colors.END}\n")
+    time.sleep(0.1)
+    
+    menu_items = [
+        ("1", "Start the bot", EMOJI['rocket']),
+        ("2", "Configure API keys", EMOJI['key']),
+        ("3", "Edit permissions", EMOJI['lock']),
+        ("4", "Check status", EMOJI['gear']),
+        ("5", "Run tests", EMOJI['check']),
+        ("6", "Start dashboard only", EMOJI['link']),
+        ("q", "Quit", EMOJI['wave']),
+    ]
+    
+    for key, text, emoji in menu_items:
+        print_menu_item(key, text, emoji)
+        time.sleep(0.05)
+    
+    print(f"\n{Colors.DIM}  Made with {EMOJI['heart']} by Sharvinzlife {EMOJI['crown']}{Colors.END}")
     print()
     
     return get_input("Select option", "1")
@@ -175,8 +233,8 @@ def configure_env_interactive():
     config_dir = project_dir / "config"
     env_file = config_dir / ".env"
     
-    print(f"{EMOJI['folder']} Config location: {Colors.CYAN}{config_dir}{Colors.END}")
-    print(f"{EMOJI['file']} Env file: {Colors.CYAN}{env_file}{Colors.END}")
+    print(f"{EMOJI['folder']} Config location: {Colors.ORANGE}{config_dir}{Colors.END}")
+    print(f"{EMOJI['file']} Env file: {Colors.ORANGE}{env_file}{Colors.END}")
     print()
     
     # Check if .env exists
@@ -194,7 +252,7 @@ def configure_env_interactive():
     print_menu_item("2", "Open in nano editor", EMOJI['edit'])
     print_menu_item("3", "Open in vim editor", EMOJI['edit'])
     print_menu_item("4", "Show current values", EMOJI['info'])
-    print_menu_item("b", "Back to main menu", "")
+    print_menu_item("b", "Back to main menu", EMOJI['arrow'])
     print()
     
     choice = get_input("Select option", "1")
@@ -228,7 +286,7 @@ def configure_paste_mode(env_file: Path):
                 existing[key.strip()] = value.strip()
     
     # Telegram Token
-    print(f"\n{EMOJI['robot']} {Colors.BOLD}Telegram Bot Token{Colors.END}")
+    print(f"\n{EMOJI['lobster']} {Colors.BOLD}Telegram Bot Token{Colors.END}")
     print(f"{Colors.DIM}   Get from @BotFather on Telegram{Colors.END}")
     current = existing.get('TELEGRAM_BOT_TOKEN', '')
     masked = f"{current[:10]}...{current[-5:]}" if len(current) > 20 else current
@@ -259,7 +317,9 @@ def configure_paste_mode(env_file: Path):
     if ollama_url:
         existing['OLLAMA_CLOUD_URL'] = ollama_url
     
-    # Write to file
+    # Write to file with animation
+    loading_animation("Saving configuration", 0.5)
+    
     lines = [
         "# OpenClaw Telegram Bot - Environment Configuration",
         "",
@@ -562,7 +622,7 @@ def run_tests():
 
 
 def start_bot():
-    """Start the bot."""
+    """Start the bot with cool animations."""
     clear_screen()
     print_banner()
     print_header(f"{EMOJI['rocket']} Starting OpenClaw Bot")
@@ -607,10 +667,25 @@ def start_bot():
             input(f"\n{Colors.DIM}Press Enter to continue...{Colors.END}")
             return
     
+    loading_animation("Validating configuration", 0.8)
     print_success("Configuration OK")
     print()
-    print(f"{EMOJI['robot']} Starting bot...")
-    print(f"{EMOJI['link']} Dashboard: {Colors.CYAN}http://localhost:8080{Colors.END}")
+    
+    # Animated startup sequence
+    startup_steps = [
+        ("Initializing providers", 0.4),
+        ("Loading permissions", 0.3),
+        ("Connecting to Telegram", 0.5),
+        ("Starting dashboard", 0.3),
+    ]
+    
+    for step, duration in startup_steps:
+        loading_animation(step, duration)
+        print_success(step)
+    
+    print()
+    print(f"{EMOJI['lobster']} {Colors.BOLD}Bot is starting...{Colors.END}")
+    print(f"{EMOJI['link']} Dashboard: {Colors.ORANGE}http://localhost:8080{Colors.END}")
     print(f"{Colors.DIM}Press Ctrl+C to stop{Colors.END}")
     print()
     
@@ -633,7 +708,9 @@ def start_dashboard_only():
     print_banner()
     print_header(f"{EMOJI['link']} Starting Dashboard")
     
-    print(f"{EMOJI['sparkles']} Dashboard URL: {Colors.CYAN}http://localhost:8080{Colors.END}")
+    loading_animation("Initializing dashboard server", 0.6)
+    
+    print(f"{EMOJI['sparkles']} Dashboard URL: {Colors.ORANGE}http://localhost:8080{Colors.END}")
     print(f"{Colors.DIM}Press Ctrl+C to stop{Colors.END}")
     print()
     
@@ -688,7 +765,11 @@ def main():
             start_dashboard_only()
         elif choice.lower() == "q":
             clear_screen()
-            print(f"\n{EMOJI['wave']} Goodbye!\n")
+            # Animated goodbye
+            print(f"\n{Colors.ORANGE}")
+            animate_text(f"  {EMOJI['wave']} Thanks for using OpenClaw! {EMOJI['lobster']}", 0.03)
+            print(f"  {Colors.DIM}Made with {EMOJI['heart']} by Sharvinzlife {EMOJI['crown']}{Colors.END}")
+            print(f"{Colors.END}\n")
             break
 
 
