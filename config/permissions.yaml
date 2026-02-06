@@ -11,7 +11,7 @@ guests:
   # - 444555666  # Add guest user IDs here
 
 settings:
-  allow_unknown_users: false
+  allow_unknown_users: true
   guest_rate_limit: 5      # requests per minute
   user_rate_limit: 20      # requests per minute
   admin_rate_limit: 100    # requests per minute
