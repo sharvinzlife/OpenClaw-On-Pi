@@ -276,6 +276,93 @@ def configure_paste_mode(env_file: Path):
     env_file.write_text('\n'.join(lines) + '\n')
     print()
     print_success("Configuration saved!")
+    
+    # Prompt for admin setup
+    print(f"\n{EMOJI['lock']} {Colors.BOLD}Admin Access Setup{Colors.END}")
+    print(f"{Colors.DIM}   Add your Telegram User ID to get admin access{Colors.END}")
+    print(f"{Colors.DIM}   Get your ID from @userinfobot on Telegram{Colors.END}")
+    
+    project_dir = get_project_dir()
+    permissions_file = project_dir / "config" / "permissions.yaml"
+    
+    # Check if admin already configured
+    admin_exists = False
+    if permissions_file.exists():
+        content = permissions_file.read_text()
+        # Check for any non-comment admin entries
+        in_admins = False
+        for line in content.splitlines():
+            if line.strip() == "admins:":
+                in_admins = True
+            elif in_admins and line.strip().startswith("- ") and not line.strip().startswith("# "):
+                admin_exists = True
+                break
+            elif in_admins and not line.startswith(" ") and not line.startswith("\t"):
+                in_admins = False
+    
+    if admin_exists:
+        print(f"{Colors.DIM}   Admin already configured{Colors.END}")
+        if confirm("Add another admin?", default=False):
+            setup_admin_user(permissions_file)
+    else:
+        if confirm("Set up admin access now?", default=True):
+            setup_admin_user(permissions_file)
+
+
+def setup_admin_user(permissions_file: Path):
+    """Set up admin user in permissions file."""
+    user_id = get_input("Your Telegram User ID")
+    
+    if not user_id:
+        print_info("Skipped admin setup")
+        return
+    
+    if not user_id.isdigit():
+        print_error("Invalid user ID - must be a number")
+        return
+    
+    # Read current file or create default
+    if permissions_file.exists():
+        content = permissions_file.read_text()
+    else:
+        content = """# OpenClaw Telegram Bot - User Permissions
+# Add Telegram user IDs to appropriate permission levels
+
+admins:
+
+users:
+  # - 987654321  # Add regular user IDs here
+
+guests:
+  # - 444555666  # Add guest user IDs here
+
+settings:
+  allow_unknown_users: false
+  guest_rate_limit: 5      # requests per minute
+  user_rate_limit: 20      # requests per minute
+  admin_rate_limit: 100    # requests per minute
+  auth_failure_lockout: 5  # failures before lockout
+  lockout_duration_minutes: 15
+"""
+    
+    # Check if user already exists
+    if f"- {user_id}" in content:
+        print_info(f"User {user_id} already configured")
+        return
+    
+    # Add user ID to admins section
+    lines = content.splitlines()
+    new_lines = []
+    added = False
+    
+    for i, line in enumerate(lines):
+        new_lines.append(line)
+        if line.strip() == "admins:" and not added:
+            new_lines.append(f"  - {user_id}  # Added via CLI setup")
+            added = True
+    
+    permissions_file.write_text('\n'.join(new_lines) + '\n')
+    print_success(f"Added user {user_id} as admin {EMOJI['star']}")
 
 
 def open_editor(file_path: Path, editor: str):
