@@ -15,9 +15,9 @@ class GroqProvider(BaseProvider):
     """LLM provider using Groq API."""
     
     DEFAULT_MODELS = [
-        "llama-3.1-70b-versatile",
+        "openai/gpt-oss-120b",
+        "llama-3.3-70b-versatile",
         "llama-3.1-8b-instant",
-        "mixtral-8x7b-32768",
     ]
     
     def __init__(self, config: dict[str, Any]):
@@ -29,7 +29,7 @@ class GroqProvider(BaseProvider):
         super().__init__(config)
         self.name = "groq"
         self.client = AsyncGroq(api_key=config.get("api_key", ""))
-        self._default_model = config.get("default_model", "llama-3.1-70b-versatile")
+        self._default_model = config.get("default_model", "openai/gpt-oss-120b")
         self._available_models = config.get("models", self.DEFAULT_MODELS)
     
     async def generate(

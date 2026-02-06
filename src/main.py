@@ -159,7 +159,16 @@ async def main() -> None:
     # Initialize and start dashboard
     dashboard_state.bot_started = datetime.now()
     dashboard_state.bot_running = True
-    dashboard_state.providers = {name: {"healthy": True} for name in providers.keys()}
+    dashboard_state.providers = {
+        name: {"status": "ready", "healthy": True} 
+        for name in providers.keys()
+    }
+    
+    # Set rate limits info for dashboard
+    dashboard_state.rate_limits = {
+        "Groq RPM": {"current": 0, "limit": 30},
+        "Groq TPM": {"current": 0, "limit": 14400},
+    }
     
     dashboard_port = getattr(app_config, 'dashboard_port', 8080)
     start_dashboard_thread(host='0.0.0.0', port=dashboard_port, state=dashboard_state)

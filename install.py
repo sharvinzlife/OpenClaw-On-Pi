@@ -56,12 +56,12 @@ class Installer:
             self.create_systemd_service()
         
         print("\n" + "=" * 50)
-        print("Installation complete!")
+        print("✅ Installation complete!")
         print("=" * 50)
         print("\nNext steps:")
-        print("1. Edit config/.env with your API keys")
-        print("2. Edit config/permissions.yaml with allowed user IDs")
-        print("3. Run: .venv/bin/python -m src.main")
+        print("1. If you skipped config, edit config/.env with your API keys")
+        print("2. Run the bot: ./start  OR  .venv/bin/python -m src.main")
+        print("3. Access dashboard at: http://<your-pi-ip>:8080")
         print()
         
         return True
@@ -176,7 +176,65 @@ class Installer:
             self._update_env_file(env_file, secrets)
             print("  Updated config/.env")
         
+        # Prompt for admin user ID
+        print("\n  🔐 Admin Setup")
+        print("  Get your Telegram User ID from @userinfobot on Telegram")
+        admin_id = input("  Your Telegram User ID (for admin access): ").strip()
+        
+        if admin_id and admin_id.isdigit():
+            self._setup_admin_user(admin_id)
+            print(f"  ✓ Added {admin_id} as admin")
+        elif admin_id:
+            print("  ⚠ Invalid ID (must be a number), skipping admin setup")
+        
         return secrets
+    
+    def _setup_admin_user(self, user_id: str) -> None:
+        """Add user ID to permissions.yaml as admin."""
+        permissions_file = self.config_dir / "permissions.yaml"
+        
+        if not permissions_file.exists():
+            # Create default permissions file
+            content = f"""# OpenClaw Telegram Bot - User Permissions
+# Add Telegram user IDs to appropriate permission levels
+
+admins:
+  - {user_id}  # Added during installation
+
+users:
+  # - 987654321  # Add regular user IDs here
+
+guests:
+  # - 444555666  # Add guest user IDs here
+
+settings:
+  allow_unknown_users: false
+  guest_rate_limit: 5      # requests per minute
+  user_rate_limit: 20      # requests per minute
+  admin_rate_limit: 100    # requests per minute
+  auth_failure_lockout: 5  # failures before lockout
+  lockout_duration_minutes: 15
+"""
+            permissions_file.write_text(content)
+            return
+        
+        # Update existing file
+        content = permissions_file.read_text()
+        
+        if f"- {user_id}" in content:
+            return  # Already exists
+        
+        lines = content.splitlines()
+        new_lines = []
+        added = False
+        
+        for line in lines:
+            new_lines.append(line)
+            if line.strip() == "admins:" and not added:
+                new_lines.append(f"  - {user_id}  # Added during installation")
+                added = True
+        
+        permissions_file.write_text('\n'.join(new_lines) + '\n')
     
     def _update_env_file(self, env_file: Path, secrets: dict) -> None:
         """Update .env file with secrets."""
