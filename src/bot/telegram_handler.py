@@ -16,8 +16,10 @@ from telegram.ext import (
 from .command_router import CommandRouter
 from ..security.auth import AuthManager
 from ..llm.provider_manager import ProviderManager
+from ..llm.rate_limiter import RateLimiter
 from ..utils.context_store import ContextStore
 from ..utils.audit_logger import AuditLogger
+from ..web.dashboard import dashboard_state
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +35,7 @@ class TelegramHandler:
         provider_manager: ProviderManager,
         context_store: ContextStore,
         audit_logger: Optional[AuditLogger] = None,
+        rate_limiter: Optional[RateLimiter] = None,
         streaming_interval_ms: int = 500,
         streaming_min_chars: int = 50,
     ):
@@ -45,6 +48,7 @@ class TelegramHandler:
             provider_manager: ProviderManager for LLM requests
             context_store: ContextStore for conversation history
             audit_logger: Optional AuditLogger for security events
+            rate_limiter: Optional RateLimiter for tracking API usage
             streaming_interval_ms: Interval for streaming updates
             streaming_min_chars: Minimum chars before streaming update
         """
@@ -54,11 +58,33 @@ class TelegramHandler:
         self.provider_manager = provider_manager
         self.context_store = context_store
         self.audit_logger = audit_logger
+        self.rate_limiter = rate_limiter
         self.streaming_interval_ms = streaming_interval_ms
         self.streaming_min_chars = streaming_min_chars
         
         self.app: Optional[Application] = None
         self._running = False
+    
+    def _update_rate_limit_stats(self) -> None:
+        """Update dashboard with current rate limit usage."""
+        if not self.rate_limiter:
+            return
+        
+        # Get Groq usage (primary provider)
+        groq_usage = self.rate_limiter.get_current_usage("groq")
+        groq_limits = self.rate_limiter.limits.get("groq")
+        
+        if groq_limits:
+            dashboard_state.rate_limits = {
+                "groq_rpm": {
+                    "current": groq_usage["requests"],
+                    "limit": groq_limits.requests_per_minute,
+                },
+                "groq_tpm": {
+                    "current": groq_usage["tokens"],
+                    "limit": groq_limits.tokens_per_minute,
+                },
+            }
     
     async def start(self) -> None:
         """Initialize and start the Telegram bot."""
@@ -118,6 +144,7 @@ class TelegramHandler:
         
         user_id = update.effective_user.id
         text = update.message.text
+        username = update.effective_user.username or str(user_id)
         
         # Parse command and args
         parts = text.split()
@@ -145,6 +172,11 @@ class TelegramHandler:
         if self.audit_logger:
             self.audit_logger.log_auth_attempt(user_id, True)
         
+        # Update dashboard stats
+        dashboard_state.total_messages += 1
+        dashboard_state.active_users.add(user_id)
+        dashboard_state.add_activity("command", f"@{username}: /{command}", "⚡")
+        
         # Route command
         response = await self.command_router.route(command, user_id, args)
         await update.message.reply_text(response)
@@ -165,6 +197,7 @@ class TelegramHandler:
         
         user_id = update.effective_user.id
         user_message = update.message.text
+        username = update.effective_user.username or str(user_id)
         
         # Check authorization
         if not self.auth_manager.is_authorized(user_id):
@@ -176,6 +209,11 @@ class TelegramHandler:
                 "You are not authorized to use this bot."
             )
             return
+        
+        # Update dashboard stats
+        dashboard_state.total_messages += 1
+        dashboard_state.active_users.add(user_id)
+        dashboard_state.add_activity("message", f"@{username}: {user_message[:50]}...", "💬")
         
         # Get conversation context
         history = self.context_store.get_context(user_id)
@@ -202,11 +240,16 @@ class TelegramHandler:
             # Add assistant response to context
             if response_text:
                 self.context_store.add_message(user_id, "assistant", response_text)
+                # Update token count (rough estimate)
+                dashboard_state.total_tokens += len(response_text.split()) * 2
+                # Update rate limit stats
+                self._update_rate_limit_stats()
                 
         except Exception as e:
             logger.error(f"Error generating response: {e}")
+            dashboard_state.add_activity("error", f"Error: {str(e)[:50]}", "❌")
             await update.message.reply_text(
-                "Sorry, I encountered an error. Please try again."
+                f"Error: All providers failed. Last error: {e}"
             )
     
     async def _stream_response(
@@ -248,18 +291,25 @@ class TelegramHandler:
                     time_since_update >= self.streaming_interval_ms
                 )
                 
-                if should_update and full_response.strip():
+                # Telegram message limit is 4096 chars - truncate if needed
+                display_text = full_response[:4000] if len(full_response) > 4000 else full_response
+                
+                if should_update and display_text.strip():
                     try:
-                        await sent_message.edit_text(full_response)
+                        await sent_message.edit_text(display_text)
                         last_update_len = len(full_response)
                         last_update_time = current_time
                     except Exception:
-                        # Ignore edit errors (e.g., message unchanged)
+                        # Ignore edit errors (e.g., message unchanged, flood control)
                         pass
             
-            # Final update with complete response
+            # Final update with complete response (truncated if needed)
             if full_response.strip():
-                await sent_message.edit_text(full_response)
+                if len(full_response) > 4000:
+                    # Split long messages
+                    await sent_message.edit_text(full_response[:4000] + "\n\n[Message truncated...]")
+                else:
+                    await sent_message.edit_text(full_response)
             else:
                 await sent_message.edit_text("(No response generated)")
                 
@@ -268,10 +318,15 @@ class TelegramHandler:
             
             # Show partial response if available
             if full_response.strip():
-                await sent_message.edit_text(
-                    f"{full_response}\n\n⚠️ Response interrupted: {e}"
-                )
+                truncated = full_response[:3900] if len(full_response) > 3900 else full_response
+                try:
+                    await sent_message.edit_text(f"{truncated}\n\n⚠️ Response interrupted: {e}")
+                except Exception:
+                    pass
             else:
-                await sent_message.edit_text(f"Error: {e}")
+                try:
+                    await sent_message.edit_text(f"Error: {e}")
+                except Exception:
+                    pass
         
         return full_response

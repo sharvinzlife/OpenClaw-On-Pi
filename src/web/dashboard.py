@@ -531,6 +531,46 @@ DASHBOARD_HTML = '''
                 document.getElementById('tokens').textContent = data.total_tokens.toLocaleString();
                 document.getElementById('users').textContent = data.active_users;
                 
+                // Update rate limits dynamically
+                if (data.rate_limits) {
+                    const rateLimitsEl = document.getElementById('rateLimits');
+                    let rateLimitsHtml = '';
+                    
+                    // Groq RPM
+                    const rpm = data.rate_limits.groq_rpm || {current: 0, limit: 30};
+                    const rpmPercent = rpm.limit > 0 ? (rpm.current / rpm.limit) * 100 : 0;
+                    const rpmClass = rpmPercent > 80 ? 'high' : rpmPercent > 50 ? 'medium' : 'low';
+                    rateLimitsHtml += `
+                        <div class="rate-limit-item">
+                            <div class="rate-limit-header">
+                                <span class="rate-limit-label">Groq RPM</span>
+                                <span class="rate-limit-value">${rpm.current} / ${rpm.limit}</span>
+                            </div>
+                            <div class="rate-limit-bar">
+                                <div class="rate-limit-fill ${rpmClass}" style="width: ${Math.min(rpmPercent, 100)}%"></div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Groq TPM
+                    const tpm = data.rate_limits.groq_tpm || {current: 0, limit: 14400};
+                    const tpmPercent = tpm.limit > 0 ? (tpm.current / tpm.limit) * 100 : 0;
+                    const tpmClass = tpmPercent > 80 ? 'high' : tpmPercent > 50 ? 'medium' : 'low';
+                    rateLimitsHtml += `
+                        <div class="rate-limit-item">
+                            <div class="rate-limit-header">
+                                <span class="rate-limit-label">Groq TPM</span>
+                                <span class="rate-limit-value">${tpm.current.toLocaleString()} / ${tpm.limit.toLocaleString()}</span>
+                            </div>
+                            <div class="rate-limit-bar">
+                                <div class="rate-limit-fill ${tpmClass}" style="width: ${Math.min(tpmPercent, 100)}%"></div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    rateLimitsEl.innerHTML = rateLimitsHtml;
+                }
+                
                 if (data.recent_activity && data.recent_activity.length > 0) {
                     const activityList = document.getElementById('activityList');
                     activityList.innerHTML = data.recent_activity.map(item => `

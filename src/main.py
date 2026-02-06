@@ -148,6 +148,7 @@ async def main() -> None:
         provider_manager=provider_manager,
         context_store=context_store,
         audit_logger=audit_logger,
+        rate_limiter=rate_limiter,
         streaming_interval_ms=app_config.streaming_update_interval_ms,
         streaming_min_chars=app_config.streaming_min_chunk_chars,
     )
