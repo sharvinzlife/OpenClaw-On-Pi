@@ -1,0 +1,19 @@
+# OpenClaw Telegram Bot - User Permissions
+# Add Telegram user IDs to appropriate permission levels
+
+admins:
+  # - 123456789  # Add admin user IDs here
+
+users:
+  # - 987654321  # Add regular user IDs here
+
+guests:
+  # - 444555666  # Add guest user IDs here
+
+settings:
+  allow_unknown_users: false
+  guest_rate_limit: 5      # requests per minute
+  user_rate_limit: 20      # requests per minute
+  admin_rate_limit: 100    # requests per minute
+  auth_failure_lockout: 5  # failures before lockout
+  lockout_duration_minutes: 15

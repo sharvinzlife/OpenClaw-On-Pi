@@ -1,0 +1,17 @@
+# OpenClaw Telegram Bot - Application Configuration
+
+bot:
+  default_provider: groq
+  default_model: llama-3.1-70b-versatile
+  response_timeout: 30
+  max_context_messages: 10
+  max_context_tokens: 4000
+
+logging:
+  level: INFO
+  retention_days: 30
+  audit_path: logs/audit.log
+
+streaming:
+  update_interval_ms: 500
+  min_chunk_chars: 50

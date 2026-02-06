@@ -1,0 +1,33 @@
+# OpenClaw Telegram Bot - LLM Provider Configuration
+
+groq:
+  enabled: true
+  priority: 1
+  rate_limits:
+    requests_per_minute: 30
+    tokens_per_minute: 14400
+  models:
+    - llama-3.1-70b-versatile
+    - llama-3.1-8b-instant
+    - mixtral-8x7b-32768
+  default_model: llama-3.1-70b-versatile
+
+ollama_cloud:
+  enabled: true
+  priority: 2
+  rate_limits:
+    requests_per_minute: 60
+    tokens_per_minute: 50000
+  models:
+    - llama3.1
+    - mistral
+  default_model: llama3.1
+
+ollama_local:
+  enabled: false
+  priority: 3
+  rate_limits:
+    requests_per_minute: 100
+    tokens_per_minute: 100000
+  models: []  # Discovered at runtime
+  default_model: llama3.1
