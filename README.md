@@ -74,6 +74,72 @@ OpenClaw is a **production-ready AI chatbot** that runs on your Raspberry Pi and
 
 ---
 
+## 🚀 Quick Start
+
+### Prerequisites
+
+- 🍓 Raspberry Pi (any model with Python 3.9+)
+- 📱 Telegram account
+- 🔑 Groq API key (free at [console.groq.com](https://console.groq.com))
+
+### One-Command Setup (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/sharvinzlife/OpenClaw-On-Pi.git
+cd OpenClaw-On-Pi
+
+# Run setup — installs uv, dependencies, and launches the CLI wizard
+./setup
+```
+
+The setup wizard will guide you through configuring API keys with a menu-based selector:
+
+```
+  🔑 Configure API Keys
+  
+  Which key would you like to configure?
+  
+  [1] 🤖 Telegram Bot Token     (Get from @BotFather)
+  [2] ⚡ Groq API Key            (Get from console.groq.com)
+  [3] ☁️  Ollama Cloud API Key    (Get from ollama.com/account)
+  [4] 🔙 Back to main menu
+```
+
+### Management Scripts
+
+```bash
+./start     # Start the bot (foreground)
+./stop      # Stop the running bot
+./restart   # Restart the bot
+./setup     # Re-run setup wizard
+```
+
+### Manual Installation
+
+```bash
+# 1. Clone
+git clone https://github.com/sharvinzlife/OpenClaw-On-Pi.git
+cd OpenClaw-On-Pi
+
+# 2. Install uv (Python package manager)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 3. Install dependencies
+uv sync
+
+# 4. Configure API keys via CLI wizard
+uv run python -m src.cli
+
+# 5. Add yourself as admin
+nano config/permissions.yaml  # Add your Telegram user ID
+
+# 6. Start
+./start
+```
+
+---
+
 ## 🏗️ Architecture
 
 
@@ -164,72 +230,6 @@ graph LR
     utils --> |"audit_logger.py"| AUD["PII Redaction"]
     
     web --> |"dashboard.py"| DASH2["Real-time UI"]
-```
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- 🍓 Raspberry Pi (any model with Python 3.9+)
-- 📱 Telegram account
-- 🔑 Groq API key (free at [console.groq.com](https://console.groq.com))
-
-### One-Command Setup (Recommended)
-
-```bash
-# Clone the repository
-git clone https://github.com/sharvinzlife/OpenClaw-On-Pi.git
-cd OpenClaw-On-Pi
-
-# Run setup — installs uv, dependencies, and launches the CLI wizard
-./setup
-```
-
-The setup wizard will guide you through configuring API keys with a menu-based selector:
-
-```
-  🔑 Configure API Keys
-  
-  Which key would you like to configure?
-  
-  [1] 🤖 Telegram Bot Token     (Get from @BotFather)
-  [2] ⚡ Groq API Key            (Get from console.groq.com)
-  [3] ☁️  Ollama Cloud API Key    (Get from ollama.com/account)
-  [4] 🔙 Back to main menu
-```
-
-### Management Scripts
-
-```bash
-./start     # Start the bot (foreground)
-./stop      # Stop the running bot
-./restart   # Restart the bot
-./setup     # Re-run setup wizard
-```
-
-### Manual Installation
-
-```bash
-# 1. Clone
-git clone https://github.com/sharvinzlife/OpenClaw-On-Pi.git
-cd OpenClaw-On-Pi
-
-# 2. Install uv (Python package manager)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# 3. Install dependencies
-uv sync
-
-# 4. Configure API keys via CLI wizard
-uv run python -m src.cli
-
-# 5. Add yourself as admin
-nano config/permissions.yaml  # Add your Telegram user ID
-
-# 6. Start
-./start
 ```
 
 ---
@@ -354,6 +354,28 @@ Beautiful **glassy ivory-orange** design with:
 
 ---
 
+## ☁️ Ollama Cloud Models
+
+OpenClaw supports 18+ cloud models via [Ollama Cloud](https://ollama.com), including:
+
+| Model | Size | Best For |
+|-------|------|----------|
+| DeepSeek V3.2 | 671B | General reasoning (default) |
+| GLM-5 | - | Chinese + English tasks |
+| GLM-4.7 Flash | - | Fast Chinese + English |
+| Kimi K2.5 | - | Long context reasoning |
+| Cogito 2.1 | 671B | Deep thinking |
+| Mistral Large 3 | 675B | Multilingual, code |
+| Qwen3 Coder | 480B | Code generation |
+| Qwen3 Coder Next | - | Latest code model |
+| GPT-OSS | 120B | General purpose |
+| Gemma 3 | 27B | Lightweight tasks |
+| LFM 2.5 Thinking | - | Reasoning |
+
+Switch models from the web dashboard or via Telegram commands.
+
+---
+
 ## 🍓 Raspberry Pi Compatibility
 
 | Model | Architecture | Status |
@@ -453,9 +475,11 @@ OpenClaw-On-Pi/
 ├── 📁 tests/                     # Property-based tests
 │   └── 📁 property/              # Hypothesis tests
 │
-├── 📄 install.py                 # One-command installer
-├── 📄 start                      # Launcher script
-├── 📄 pyproject.toml             # Project config
+├── 📄 start                      # Start the bot
+├── 📄 stop                       # Stop the bot
+├── 📄 restart                    # Restart the bot
+├── 📄 setup                      # First-time setup wizard
+├── 📄 pyproject.toml             # Project config (uv)
 └── 📄 README.md                  # You are here!
 ```
 
@@ -499,28 +523,6 @@ sequenceDiagram
 - 🔒 **PII Redaction** - Sensitive data masked in logs
 - 📝 **Audit Trail** - Complete activity logging
 - 🔑 **API Key Protection** - Keys stored in .env, never logged
-
----
-
-## ☁️ Ollama Cloud Models
-
-OpenClaw supports 18+ cloud models via [Ollama Cloud](https://ollama.com), including:
-
-| Model | Size | Best For |
-|-------|------|----------|
-| DeepSeek V3.2 | 671B | General reasoning (default) |
-| GLM-5 | - | Chinese + English tasks |
-| GLM-4.7 Flash | - | Fast Chinese + English |
-| Kimi K2.5 | - | Long context reasoning |
-| Cogito 2.1 | 671B | Deep thinking |
-| Mistral Large 3 | 675B | Multilingual, code |
-| Qwen3 Coder | 480B | Code generation |
-| Qwen3 Coder Next | - | Latest code model |
-| GPT-OSS | 120B | General purpose |
-| Gemma 3 | 27B | Lightweight tasks |
-| LFM 2.5 Thinking | - | Reasoning |
-
-Switch models from the web dashboard or via Telegram commands.
 
 ---
 
@@ -570,6 +572,7 @@ Built with these amazing tools:
 - [Ollama](https://ollama.ai/) - Run LLMs locally
 - [Flask](https://flask.palletsprojects.com/) - Web dashboard
 - [Hypothesis](https://hypothesis.readthedocs.io/) - Property-based testing
+- [uv](https://docs.astral.sh/uv/) - Fast Python package manager
 
 ---
 
