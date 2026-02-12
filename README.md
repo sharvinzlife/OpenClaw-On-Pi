@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-0.1.0-orange?style=for-the-badge" alt="Version"/>
+  <img src="https://img.shields.io/badge/Version-0.3.0-orange?style=for-the-badge" alt="Version"/>
   <img src="https://img.shields.io/badge/Python-3.9+-blue?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License"/>
   <img src="https://img.shields.io/badge/Platform-Raspberry%20Pi-C51A4A?style=for-the-badge&logo=raspberrypi&logoColor=white" alt="Platform"/>
@@ -27,6 +27,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Telegram-Bot-26A5E4?style=flat-square&logo=telegram&logoColor=white" alt="Telegram"/>
   <img src="https://img.shields.io/badge/Groq-LLM-FF6B35?style=flat-square" alt="Groq"/>
+  <img src="https://img.shields.io/badge/Ollama_Cloud-☁️-10B981?style=flat-square" alt="Ollama Cloud"/>
   <img src="https://img.shields.io/badge/Ollama-Local%20AI-000000?style=flat-square" alt="Ollama"/>
   <img src="https://img.shields.io/badge/Flask-Dashboard-000000?style=flat-square&logo=flask&logoColor=white" alt="Flask"/>
 </p>
@@ -61,7 +62,7 @@ OpenClaw is a **production-ready AI chatbot** that runs on your Raspberry Pi and
 
 | Feature | Description |
 |---------|-------------|
-| 🧠 **Multi-Provider AI** | Groq (blazing fast), Ollama Cloud (remote), Local Ollama (privacy) |
+| 🧠 **Multi-Provider AI** | Groq (blazing fast), Ollama Cloud (18+ models), Local Ollama (privacy) |
 | 🔄 **Smart Failover** | Automatic switching on rate limits or errors |
 | ⚡ **Rate Limiting** | Sliding window algorithm with proactive failover at 80% |
 | 🔐 **Permission System** | Admin, User, Guest roles with granular access |
@@ -175,18 +176,37 @@ graph LR
 - 📱 Telegram account
 - 🔑 Groq API key (free at [console.groq.com](https://console.groq.com))
 
-### One-Command Install
+### One-Command Setup (Recommended)
 
 ```bash
 # Clone the repository
 git clone https://github.com/sharvinzlife/OpenClaw-On-Pi.git
 cd OpenClaw-On-Pi
 
-# Run the installer
-python3 install.py
+# Run setup — installs uv, dependencies, and launches the CLI wizard
+./setup
+```
 
-# Start OpenClaw
-./start
+The setup wizard will guide you through configuring API keys with a menu-based selector:
+
+```
+  🔑 Configure API Keys
+  
+  Which key would you like to configure?
+  
+  [1] 🤖 Telegram Bot Token     (Get from @BotFather)
+  [2] ⚡ Groq API Key            (Get from console.groq.com)
+  [3] ☁️  Ollama Cloud API Key    (Get from ollama.com/account)
+  [4] 🔙 Back to main menu
+```
+
+### Management Scripts
+
+```bash
+./start     # Start the bot (foreground)
+./stop      # Stop the running bot
+./restart   # Restart the bot
+./setup     # Re-run setup wizard
 ```
 
 ### Manual Installation
@@ -196,22 +216,20 @@ python3 install.py
 git clone https://github.com/sharvinzlife/OpenClaw-On-Pi.git
 cd OpenClaw-On-Pi
 
-# 2. Create virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
+# 2. Install uv (Python package manager)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 3. Install dependencies
-pip install -e ".[dev]"
+uv sync
 
-# 4. Configure
-cp config/.env.template config/.env
-nano config/.env  # Add your API keys
+# 4. Configure API keys via CLI wizard
+uv run python -m src.cli
 
 # 5. Add yourself as admin
 nano config/permissions.yaml  # Add your Telegram user ID
 
-# 6. Run
-python -m src.cli
+# 6. Start
+./start
 ```
 
 ---
@@ -225,8 +243,8 @@ python -m src.cli
 TELEGRAM_BOT_TOKEN=your_bot_token_from_botfather
 GROQ_API_KEY=your_groq_api_key
 
-# Optional
-OLLAMA_CLOUD_URL=http://your-ollama-server:11434
+# Optional — Ollama Cloud (access 18+ cloud models)
+OLLAMA_API_KEY=your_ollama_cloud_api_key
 ```
 
 ### 👤 Get Your Telegram User ID
@@ -245,11 +263,10 @@ admins:
 ## 🎮 CLI Commands
 
 ```bash
-./start              # 🎯 Interactive menu
-./start start        # 🚀 Start bot directly
-./start config       # 🔑 Configure API keys
-./start status       # 📊 Check configuration
-./start test         # 🧪 Run tests
+./setup              # 🔧 First-time setup wizard
+./start              # 🚀 Start the bot
+./stop               # 🛑 Stop the bot
+./restart            # 🔄 Restart the bot
 ```
 
 ### CLI Preview
@@ -322,7 +339,8 @@ Access the monitoring dashboard at `http://your-pi-ip:8080`
 - 💬 **Message Counter** - Total messages processed
 - 🎯 **Token Usage** - Tokens consumed across providers
 - 👥 **Active Users** - Currently active user count
-- 🧠 **Provider Status** - Health of each AI provider
+- 🧠 **Provider Status** - Health of each AI provider with active toggle
+- 🔄 **Model Switching** - Change AI models per provider from the UI
 - 📊 **Rate Limits** - Visual progress bars for limits
 - 📝 **Activity Feed** - Recent bot activity stream
 
@@ -484,12 +502,38 @@ sequenceDiagram
 
 ---
 
+## ☁️ Ollama Cloud Models
+
+OpenClaw supports 18+ cloud models via [Ollama Cloud](https://ollama.com), including:
+
+| Model | Size | Best For |
+|-------|------|----------|
+| DeepSeek V3.2 | 671B | General reasoning (default) |
+| GLM-5 | - | Chinese + English tasks |
+| GLM-4.7 Flash | - | Fast Chinese + English |
+| Kimi K2.5 | - | Long context reasoning |
+| Cogito 2.1 | 671B | Deep thinking |
+| Mistral Large 3 | 675B | Multilingual, code |
+| Qwen3 Coder | 480B | Code generation |
+| Qwen3 Coder Next | - | Latest code model |
+| GPT-OSS | 120B | General purpose |
+| Gemma 3 | 27B | Lightweight tasks |
+| LFM 2.5 Thinking | - | Reasoning |
+
+Switch models from the web dashboard or via Telegram commands.
+
+---
+
 ## 📈 Roadmap
 
 - [x] Multi-provider LLM support
 - [x] Smart failover with rate limiting
 - [x] Web dashboard
 - [x] Property-based testing
+- [x] Ollama Cloud support (18+ models)
+- [x] CLI setup wizard
+- [x] UV-based package management
+- [x] Dashboard model switching
 - [ ] Voice message support
 - [ ] Image generation (DALL-E/Stable Diffusion)
 - [ ] WhatsApp integration

@@ -29,7 +29,12 @@ class OllamaCloudProvider(BaseProvider):
         super().__init__(config)
         self.name = "ollama_cloud"
         self.cloud_url = config.get("cloud_url", "")
-        self.client = ollama.AsyncClient(host=self.cloud_url)
+        self.api_key = config.get("api_key", "")
+        # If API key provided, use Bearer auth header (for ollama.com cloud API)
+        headers = {}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        self.client = ollama.AsyncClient(host=self.cloud_url, headers=headers)
         self._default_model = config.get("default_model", "llama3.1")
         self._available_models = config.get("models", self.DEFAULT_MODELS)
     
@@ -48,6 +53,7 @@ class OllamaCloudProvider(BaseProvider):
             LLMResponse with generated content
         """
         model = model or self._default_model
+        logger.debug(f"OllamaCloud generating with model='{model}' (default='{self._default_model}')")
         start_time = time.time()
         
         try:
@@ -94,6 +100,7 @@ class OllamaCloudProvider(BaseProvider):
             Response content chunks as strings
         """
         model = model or self._default_model
+        logger.debug(f"OllamaCloud streaming with model='{model}' (default='{self._default_model}')")
         start_time = time.time()
         
         try:

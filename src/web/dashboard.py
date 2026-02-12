@@ -2,10 +2,20 @@
 
 import json
 import threading
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
-from flask import Flask, render_template_string, jsonify
+from flask import Flask, render_template_string, jsonify, request
+
+
+@dataclass
+class MessageRecord:
+    """A single message exchange between user and bot."""
+    username: str
+    user_message: str
+    bot_response: str
+    timestamp: str  # ISO format string
 
 
 class DashboardState:
@@ -20,6 +30,8 @@ class DashboardState:
         self.providers: dict = {}
         self.recent_activity: list = []
         self.rate_limits: dict = {}
+        self.skill_registry = None  # Set by main.py after skill loading
+        self.message_feed: list[MessageRecord] = []
     
     def to_dict(self) -> dict:
         uptime = ""
@@ -35,10 +47,21 @@ class DashboardState:
             "total_messages": self.total_messages,
             "total_tokens": self.total_tokens,
             "active_users": len(self.active_users),
-            "providers": self.providers,
+            "providers": self._get_live_providers(),
             "recent_activity": self.recent_activity[-10:],
             "rate_limits": self.rate_limits,
+            "skills": self._get_skill_stats(),
         }
+    
+    def _get_live_providers(self) -> dict:
+        """Get provider status with live health checks."""
+        ref = getattr(self, '_providers_ref', None)
+        if ref:
+            return {
+                name: {"status": "ready" if p.is_healthy else "offline", "healthy": p.is_healthy}
+                for name, p in ref.items()
+            }
+        return self.providers
     
     def add_activity(self, activity_type: str, text: str, icon: str = "💬"):
         """Add activity to recent list."""
@@ -50,10 +73,42 @@ class DashboardState:
         })
         if len(self.recent_activity) > 50:
             self.recent_activity = self.recent_activity[-50:]
+    
+    def add_message_record(self, username: str, user_message: str, bot_response: str) -> None:
+        """Record a message exchange. Capped at 100 records."""
+        record = MessageRecord(
+            username=username,
+            user_message=user_message,
+            bot_response=bot_response,
+            timestamp=datetime.now().isoformat(),
+        )
+        self.message_feed.append(record)
+        if len(self.message_feed) > 100:
+            self.message_feed = self.message_feed[-100:]
+    
+    def _get_skill_stats(self) -> dict:
+        """Get skill stats from the registry for dashboard display."""
+        if not self.skill_registry:
+            return {}
+        stats = {}
+        for command, skill_stats in self.skill_registry.get_all_stats().items():
+            stats[command] = {
+                "name": skill_stats.name,
+                "total_executions": skill_stats.total_executions,
+                "success_count": skill_stats.success_count,
+                "failure_count": skill_stats.failure_count,
+                "last_used": (
+                    skill_stats.last_used.isoformat()
+                    if skill_stats.last_used
+                    else None
+                ),
+            }
+        return stats
 
 
 # Global state
 dashboard_state = DashboardState()
+_provider_manager = None
 
 
 # HTML Template with Peachy Ivory Glassy Aero Design + Animated Orbs
@@ -300,7 +355,7 @@ DASHBOARD_HTML = '''
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 107, 53, 0.12);
             border-radius: 20px;
-            overflow: hidden;
+            overflow: visible;
             transition: all 0.3s ease;
         }
         .panel:hover {
@@ -457,9 +512,180 @@ DASHBOARD_HTML = '''
         ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.3); border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: var(--orange-primary); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--orange-dark); }
+        
+        /* Model Selection Panel */
+        .model-select-list { display: flex; flex-direction: column; gap: 1.25rem; }
+        .active-btn {
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            border: 2px solid rgba(255, 107, 53, 0.3);
+            background: rgba(255, 255, 255, 0.5);
+            color: var(--text-medium);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        .active-btn:hover {
+            border-color: var(--orange-primary);
+            background: rgba(255, 107, 53, 0.1);
+            color: var(--orange-primary);
+        }
+        .active-btn.is-active {
+            background: rgba(76, 175, 80, 0.15);
+            border-color: #4CAF50;
+            color: #2E7D32;
+            cursor: default;
+        }
+        .model-select-card.active-provider {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.3), 0 4px 15px rgba(76, 175, 80, 0.1);
+        }
+        .model-select-card {
+            display: flex; flex-direction: column;
+            padding: 1.25rem 1.5rem; gap: 14px;
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 107, 53, 0.12);
+            border-radius: 18px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative; overflow: visible;
+        }
+        .model-select-card::before {
+            content: ''; position: absolute; top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+            transition: left 0.6s;
+        }
+        .model-select-card:hover::before { left: 100%; }
+        .model-select-card:hover {
+            background: rgba(255, 255, 255, 0.75);
+            border-color: rgba(255, 107, 53, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(255, 107, 53, 0.12);
+        }
+        .model-select-info { display: flex; align-items: center; gap: 14px; }
+        .model-select-name { font-weight: 600; color: var(--text-dark); font-size: 1rem; }
+        .model-select-current {
+            font-size: 0.78rem; color: var(--text-light);
+            display: flex; align-items: center; gap: 6px; margin-top: 2px;
+        }
+        .model-select-current .current-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--success); display: inline-block;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        .model-dropdown-wrap { position: relative; }
+        .model-dropdown {
+            padding: 10px 14px;
+            border: 1.5px solid rgba(255, 107, 53, 0.18);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            color: var(--text-dark);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem; font-weight: 500;
+            cursor: pointer; transition: all 0.3s ease;
+            outline: none; max-width: 200px;
+        }
+        .model-dropdown:hover, .model-dropdown:focus {
+            border-color: var(--orange-primary);
+            box-shadow: 0 0 0 3px rgba(255,107,53,0.12), 0 8px 25px rgba(255,107,53,0.1);
+            background: rgba(255, 255, 255, 0.85);
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed; top: 90px; right: 24px; z-index: 9999;
+            display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+        }
+        .toast {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 22px; border-radius: 16px;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 107, 53, 0.15);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.1), 0 4px 12px rgba(255,107,53,0.08);
+            font-family: 'Inter', sans-serif; font-size: 0.88rem; font-weight: 500;
+            color: var(--text-dark); pointer-events: auto;
+            animation: toastIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 380px; min-width: 260px; position: relative; overflow: hidden;
+        }
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--error); }
+        .toast-icon {
+            width: 36px; height: 36px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; flex-shrink: 0;
+        }
+        .toast.success .toast-icon { background: rgba(76, 175, 80, 0.15); }
+        .toast.error .toast-icon { background: rgba(244, 67, 54, 0.15); }
+        .toast-body { flex: 1; }
+        .toast-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 2px; }
+        .toast.success .toast-title { color: #2E7D32; }
+        .toast.error .toast-title { color: #C62828; }
+        .toast-msg { font-size: 0.8rem; color: var(--text-light); }
+        .toast-progress {
+            position: absolute; bottom: 0; left: 0; height: 3px;
+            border-radius: 0 0 16px 16px;
+            animation: toastProgress 3.5s linear forwards;
+        }
+        .toast.success .toast-progress { background: var(--success); }
+        .toast.error .toast-progress { background: var(--error); }
+        @keyframes toastIn {
+            0% { opacity: 0; transform: translateX(80px) scale(0.9); }
+            100% { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        @keyframes toastOut {
+            0% { opacity: 1; transform: translateX(0) scale(1); }
+            100% { opacity: 0; transform: translateX(80px) scale(0.9); }
+        }
+        @keyframes toastProgress { 0% { width: 100%; } 100% { width: 0%; } }
+
+        /* Message Feed Panel */
+        .message-feed { display: flex; flex-direction: column; gap: 0.75rem; max-height: 400px; overflow-y: auto; }
+        .message-item {
+            padding: 0.85rem;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            animation: slideIn 0.3s ease;
+        }
+        .message-item:hover { background: rgba(255, 255, 255, 0.7); }
+        .message-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .message-username {
+            font-weight: 600; font-size: 0.85rem; color: var(--orange-primary);
+        }
+        .message-time { font-size: 0.7rem; color: var(--text-light); }
+        .message-user-text {
+            font-size: 0.85rem; color: var(--text-dark);
+            padding: 0.4rem 0.6rem;
+            background: rgba(255, 107, 53, 0.08);
+            border-radius: 8px;
+            margin-bottom: 0.4rem;
+            word-break: break-word;
+        }
+        .message-bot-text {
+            font-size: 0.85rem; color: var(--text-medium);
+            padding: 0.4rem 0.6rem;
+            background: rgba(99, 102, 241, 0.08);
+            border-radius: 8px;
+            word-break: break-word;
+        }
+        .message-label {
+            font-size: 0.7rem; color: var(--text-light);
+            text-transform: uppercase; letter-spacing: 0.5px;
+            margin-bottom: 0.2rem;
+        }
     </style>
 </head>
 <body>
+    <div class="toast-container" id="toastContainer"></div>
     <div class="orb-container">
         <div class="bg-orb orb-1"></div>
         <div class="bg-orb orb-2"></div>
@@ -513,36 +739,7 @@ DASHBOARD_HTML = '''
                 </div>
                 <div class="panel-content">
                     <div class="provider-list" id="providerList">
-                        <div class="provider-card">
-                            <div class="provider-info">
-                                <div class="provider-icon groq">⚡</div>
-                                <div>
-                                    <div class="provider-name">Groq</div>
-                                    <div class="provider-status">Primary • Fast inference</div>
-                                </div>
-                            </div>
-                            <span class="provider-badge healthy">Ready</span>
-                        </div>
-                        <div class="provider-card">
-                            <div class="provider-info">
-                                <div class="provider-icon ollama">☁️</div>
-                                <div>
-                                    <div class="provider-name">Ollama Cloud</div>
-                                    <div class="provider-status">Backup • Remote</div>
-                                </div>
-                            </div>
-                            <span class="provider-badge healthy">Ready</span>
-                        </div>
-                        <div class="provider-card">
-                            <div class="provider-info">
-                                <div class="provider-icon local">🖥️</div>
-                                <div>
-                                    <div class="provider-name">Local Ollama</div>
-                                    <div class="provider-status">Fallback • Privacy</div>
-                                </div>
-                            </div>
-                            <span class="provider-badge unhealthy">Disabled</span>
-                        </div>
+                        <div class="empty-state"><div class="empty-state-icon">🔄</div><div>Loading...</div></div>
                     </div>
                 </div>
             </div>
@@ -576,6 +773,21 @@ DASHBOARD_HTML = '''
             
             <div class="panel">
                 <div class="panel-header">
+                    <span>🤖</span>
+                    <span class="panel-title">Model Selection</span>
+                </div>
+                <div class="panel-content">
+                    <div class="model-select-list" id="modelSelectList">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🔄</div>
+                            <div>Loading models...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-header">
                     <span>📝</span>
                     <span class="panel-title">Recent Activity</span>
                 </div>
@@ -589,6 +801,21 @@ DASHBOARD_HTML = '''
                 </div>
             </div>
             
+            <div class="panel" style="grid-column: 1 / -1;">
+                <div class="panel-header">
+                    <span>📨</span>
+                    <span class="panel-title">Message Feed</span>
+                </div>
+                <div class="panel-content">
+                    <div class="message-feed" id="messageFeed">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div>No messages yet</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="panel">
                 <div class="panel-header">
                     <span>🖥️</span>
@@ -640,6 +867,160 @@ DASHBOARD_HTML = '''
     </footer>
     
     <script>
+        async function loadModels() {
+            try {
+                const response = await fetch('/api/models');
+                const data = await response.json();
+                const container = document.getElementById('modelSelectList');
+                
+                if (!data.providers || Object.keys(data.providers).length === 0) {
+                    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🤖</div><div>No providers available</div></div>';
+                    return;
+                }
+                
+                const iconMap = {groq: '⚡', ollama_cloud: '☁️', ollama_local: '🖥️', ollama: '☁️'};
+                const colorMap = {groq: 'groq', ollama_cloud: 'ollama', ollama_local: 'local', ollama: 'ollama'};
+                
+                container.innerHTML = Object.entries(data.providers).map(([name, info]) => `
+                    <div class="model-select-card ${info.active ? 'active-provider' : ''}" data-provider-name="${name}">
+                        <div style="display:flex;align-items:center;justify-content:space-between;">
+                            <div class="model-select-info">
+                                <div class="provider-icon ${colorMap[name] || 'local'}">${iconMap[name] || '🧠'}</div>
+                                <div>
+                                    <div class="model-select-name">${name}</div>
+                                    <div class="model-select-current"><span class="current-dot"></span> ${info.current || 'none'}</div>
+                                </div>
+                            </div>
+                            <button class="active-btn ${info.active ? 'is-active' : ''}" onclick="setActiveProvider('${name}')">${info.active ? '\u2713 ACTIVE' : 'USE'}</button>
+                        </div>
+                        <select class="model-dropdown" data-provider="${name}" style="width:100%;">
+                            ${info.models.map(m => `<option value="${m}" ${m === info.current ? 'selected' : ''}>${m}</option>`).join('')}
+                        </select>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to load models:', error);
+            }
+        }
+
+        async function setActiveProvider(providerName) {
+            try {
+                const response = await fetch('/api/active-provider', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({provider: providerName})
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('success', 'Active Provider', providerName + ' is now the active provider');
+                    await loadModels();
+                } else {
+                    showToast('error', 'Error', data.error || 'Failed to set active provider');
+                }
+            } catch (error) {
+                showToast('error', 'Error', 'Failed to set active provider');
+            }
+        }
+
+        function showToast(type, title, message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            toast.innerHTML = `
+                <div class="toast-icon">${type === 'success' ? '✅' : '❌'}</div>
+                <div class="toast-body">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-msg">${message}</div>
+                </div>
+                <div class="toast-progress"></div>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'toastOut 0.4s ease forwards';
+                setTimeout(() => toast.remove(), 400);
+            }, 3500);
+        }
+
+        async function setModel(selectEl) {
+            const provider = selectEl.dataset.provider;
+            const model = selectEl.value;
+            
+            try {
+                const response = await fetch('/api/model', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({provider: provider, model: model})
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('success', 'Model Updated', provider + ' → ' + model);
+                    const card = selectEl.closest('.model-select-card');
+                    const currentLabel = card.querySelector('.model-select-current');
+                    if (currentLabel) currentLabel.innerHTML = '<span class="current-dot"></span> ' + model;
+                    card.style.borderColor = 'var(--success)';
+                    card.style.boxShadow = '0 0 20px rgba(76, 175, 80, 0.2)';
+                    setTimeout(() => { card.style.borderColor = ''; card.style.boxShadow = ''; }, 1500);
+                } else {
+                    showToast('error', 'Failed', data.error || 'Could not set model');
+                }
+            } catch (error) {
+                console.error('setModel error:', error);
+                showToast('error', 'Error', 'Network error: ' + error.message);
+            }
+        }
+
+
+        let lastMessageTotal = 0;
+
+        async function pollMessages() {
+            try {
+                const afterParam = lastMessageTotal > 0 ? `?after=${lastMessageTotal - 1}` : '';
+                const response = await fetch('/api/messages' + afterParam);
+                const data = await response.json();
+                const container = document.getElementById('messageFeed');
+                
+                if (data.total === 0) {
+                    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div>No messages yet</div></div>';
+                    lastMessageTotal = 0;
+                    return;
+                }
+                
+                if (data.messages.length > 0) {
+                    // If this is the first load, clear the empty state
+                    if (lastMessageTotal <= 0) {
+                        container.innerHTML = '';
+                    }
+                    
+                    data.messages.forEach(msg => {
+                        const item = document.createElement('div');
+                        item.className = 'message-item';
+                        const ts = new Date(msg.timestamp).toLocaleTimeString();
+                        const userText = msg.user_message.length > 200 ? msg.user_message.substring(0, 200) + '...' : msg.user_message;
+                        const botText = msg.bot_response.length > 300 ? msg.bot_response.substring(0, 300) + '...' : msg.bot_response;
+                        item.innerHTML = `
+                            <div class="message-header">
+                                <span class="message-username">@${msg.username}</span>
+                                <span class="message-time">${ts}</span>
+                            </div>
+                            <div class="message-label">User</div>
+                            <div class="message-user-text">${userText}</div>
+                            <div class="message-label">Bot</div>
+                            <div class="message-bot-text">${botText}</div>
+                        `;
+                        container.appendChild(item);
+                    });
+                    
+                    // Auto-scroll to bottom
+                    container.scrollTop = container.scrollHeight;
+                }
+                
+                lastMessageTotal = data.total;
+            } catch (error) {
+                console.error('Failed to poll messages:', error);
+            }
+        }
+
         async function updateDashboard() {
             try {
                 const response = await fetch('/api/status');
@@ -659,6 +1040,21 @@ DASHBOARD_HTML = '''
                 document.getElementById('messages').textContent = data.total_messages.toLocaleString();
                 document.getElementById('tokens').textContent = data.total_tokens.toLocaleString();
                 document.getElementById('users').textContent = data.active_users;
+                
+                // Update provider cards dynamically
+                const providerContainer = document.getElementById('providerList');
+                if (data.providers && Object.keys(data.providers).length > 0) {
+                    const iconMap = {groq: '⚡', ollama_cloud: '☁️', ollama_local: '🖥️'};
+                    const colorMap = {groq: 'groq', ollama_cloud: 'ollama', ollama_local: 'local'};
+                    const nameMap = {groq: 'Groq', ollama_cloud: 'Ollama Cloud', ollama_local: 'Local Ollama'};
+                    const descMap = {groq: 'Primary • Fast inference', ollama_cloud: 'Cloud • Remote', ollama_local: 'Fallback • Privacy'};
+                    providerContainer.innerHTML = Object.entries(data.providers).map(([name, info]) => {
+                        const isHealthy = info.healthy || info.status === 'ready';
+                        const badgeClass = isHealthy ? 'healthy' : 'unhealthy';
+                        const badgeText = isHealthy ? 'Ready' : (info.status === 'disabled' ? 'Disabled' : 'Offline');
+                        return '<div class="provider-card"><div class="provider-info"><div class="provider-icon ' + (colorMap[name] || 'local') + '">'  + (iconMap[name] || '🧠') + '</div><div><div class="provider-name">'  + (nameMap[name] || name) + '</div><div class="provider-status">'  + (descMap[name] || '') + '</div></div></div><span class="provider-badge ' + badgeClass + '">'  + badgeText + '</span></div>';
+                    }).join('');
+                }
                 
                 // Update rate limits dynamically
                 if (data.rate_limits) {
@@ -718,18 +1114,29 @@ DASHBOARD_HTML = '''
         }
         
         updateDashboard();
+        loadModels();
+        pollMessages();
         setInterval(updateDashboard, 5000);
+        setInterval(pollMessages, 3000);
+
+        // Event delegation for model dropdowns (backup for onchange)
+        document.getElementById('modelSelectList').addEventListener('change', function(e) {
+            if (e.target.classList.contains('model-dropdown')) {
+                setModel(e.target);
+            }
+        });
     </script>
 </body>
 </html>
 '''
 
 
-def create_dashboard_app(state: Optional[DashboardState] = None) -> Flask:
+def create_dashboard_app(state: Optional[DashboardState] = None, provider_manager=None) -> Flask:
     """Create Flask dashboard app."""
-    global dashboard_state
+    global dashboard_state, _provider_manager
     if state:
         dashboard_state = state
+    _provider_manager = provider_manager
     
     app = Flask(__name__)
     
@@ -741,24 +1148,80 @@ def create_dashboard_app(state: Optional[DashboardState] = None) -> Flask:
     def api_status():
         return jsonify(dashboard_state.to_dict())
     
+    @app.route('/api/models')
+    def api_models():
+        if not _provider_manager:
+            return jsonify({"error": "Provider manager not available"}), 503
+        return jsonify({"providers": _provider_manager.get_all_models()})
+    
+    @app.route('/api/model', methods=['POST'])
+    def api_set_model():
+        if not _provider_manager:
+            return jsonify({"success": False, "error": "Provider manager not available"}), 503
+        data = request.get_json()
+        if not data or 'provider' not in data or 'model' not in data:
+            return jsonify({"success": False, "error": "Missing 'provider' and/or 'model' in request body"}), 400
+        provider_name = data['provider']
+        model_name = data['model']
+        result = _provider_manager.set_provider_model(provider_name, model_name)
+        if result:
+            return jsonify({"success": True, "provider": provider_name, "model": model_name})
+        else:
+            return jsonify({"success": False, "error": f"Failed to set model '{model_name}' on provider '{provider_name}'"}), 400
+    
+    @app.route('/api/active-provider', methods=['POST'])
+    def api_set_active_provider():
+        if not _provider_manager:
+            return jsonify({"success": False, "error": "Provider manager not available"}), 503
+        data = request.get_json()
+        if not data or 'provider' not in data:
+            return jsonify({"success": False, "error": "Missing 'provider'"}), 400
+        result = _provider_manager.set_active_provider(data['provider'])
+        if result:
+            return jsonify({"success": True, "active": data['provider']})
+        return jsonify({"success": False, "error": f"Provider '{data['provider']}' not found"}), 400
+    
+    @app.route('/api/messages')
+    def api_messages():
+        after = request.args.get('after', -1, type=int)
+        feed = dashboard_state.message_feed
+        total = len(feed)
+        if after >= 0 and after < total:
+            messages = feed[after + 1:]
+        else:
+            messages = feed
+        return jsonify({
+            "messages": [
+                {
+                    "username": m.username,
+                    "user_message": m.user_message,
+                    "bot_response": m.bot_response,
+                    "timestamp": m.timestamp,
+                }
+                for m in messages
+            ],
+            "total": total,
+        })
+    
     return app
 
 
-def run_dashboard(host: str = '0.0.0.0', port: int = 8080, state: Optional[DashboardState] = None):
+def run_dashboard(host: str = '0.0.0.0', port: int = 8080, state: Optional[DashboardState] = None, provider_manager=None):
     """Run the dashboard server."""
-    app = create_dashboard_app(state)
+    app = create_dashboard_app(state, provider_manager=provider_manager)
     app.run(host=host, port=port, debug=False, threaded=True)
 
 
-def start_dashboard_thread(host: str = '0.0.0.0', port: int = 8080, state: Optional[DashboardState] = None) -> threading.Thread:
+def start_dashboard_thread(host: str = '0.0.0.0', port: int = 8080, state: Optional[DashboardState] = None, provider_manager=None) -> threading.Thread:
     """Start dashboard in a background thread."""
-    global dashboard_state
+    global dashboard_state, _provider_manager
     if state:
         dashboard_state = state
+    _provider_manager = provider_manager
     
     thread = threading.Thread(
         target=run_dashboard,
-        kwargs={'host': host, 'port': port, 'state': state},
+        kwargs={'host': host, 'port': port, 'state': state, 'provider_manager': provider_manager},
         daemon=True
     )
     thread.start()

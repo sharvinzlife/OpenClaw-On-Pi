@@ -112,6 +112,33 @@ class BaseProvider(ABC):
             Default model name
         """
         return self._default_model
+
+    @property
+    def current_model(self) -> str:
+        """Get the current active model for this provider.
+
+        Returns:
+            Current model name
+        """
+        return self._default_model
+
+    def set_model(self, model_name: str) -> bool:
+        """Set the active model for this provider.
+
+        Args:
+            model_name: Name of the model to activate
+
+        Returns:
+            True if model was set successfully, False if model not available
+        """
+        if model_name not in self._available_models:
+            logger.warning(
+                f"Provider {self.name}: model '{model_name}' not in available models"
+            )
+            return False
+        self._default_model = model_name
+        logger.info(f"Provider {self.name}: active model set to '{model_name}'")
+        return True
     
     def mark_unhealthy(self, error: str) -> None:
         """Mark provider as unhealthy after failure.

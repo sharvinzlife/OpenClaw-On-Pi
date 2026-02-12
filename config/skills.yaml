@@ -1,0 +1,49 @@
+# OpenClaw Bot - Skills Configuration
+# Each skill can be enabled/disabled and has skill-specific settings.
+
+skills:
+  python_runner:
+    enabled: true
+    timeout_seconds: 10
+
+  ytdl:
+    enabled: true
+    max_file_size_mb: 50
+    default_format: video  # audio | video
+    temp_dir: /tmp/openclaw_ytdl
+
+  stock:
+    enabled: true
+
+  crypto:
+    enabled: true
+    api_base_url: https://api.coingecko.com/api/v3
+
+  weather:
+    enabled: true
+    api_base_url: https://wttr.in
+
+  wiki:
+    enabled: true
+    language: en
+
+  news:
+    enabled: true
+    feeds:
+      - https://feeds.bbci.co.uk/news/rss.xml
+      - https://feeds.reuters.com/reuters/topNews
+    max_headlines: 5
+
+  calc:
+    enabled: true
+
+  sysinfo:
+    enabled: true
+
+  ocr:
+    enabled: true
+    temp_dir: /tmp/openclaw_ocr
+
+  translate:
+    enabled: true
+    api_base_url: https://libretranslate.com

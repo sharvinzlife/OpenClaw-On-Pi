@@ -18,6 +18,7 @@ from .llm.ollama_local_provider import LocalOllamaProvider
 from .llm.provider_manager import ProviderManager
 from .bot.command_router import CommandRouter, VERSION
 from .bot.telegram_handler import TelegramHandler
+from .skills.registry import SkillRegistry
 from .web.dashboard import start_dashboard_thread, DashboardState, dashboard_state
 
 logger = logging.getLogger(__name__)
@@ -95,9 +96,10 @@ async def main() -> None:
         logger.info("Groq provider initialized")
     
     ollama_cloud_cfg = config_manager.provider_configs.get("ollama_cloud")
-    if ollama_cloud_cfg and ollama_cloud_cfg.enabled and app_config.ollama_cloud_url:
+    if ollama_cloud_cfg and ollama_cloud_cfg.enabled and app_config.ollama_cloud_url and app_config.ollama_api_key:
         providers["ollama_cloud"] = OllamaCloudProvider({
             "cloud_url": app_config.ollama_cloud_url,
+            "api_key": app_config.ollama_api_key or "",
             "default_model": ollama_cloud_cfg.default_model,
             "models": ollama_cloud_cfg.models,
         })
@@ -140,6 +142,14 @@ async def main() -> None:
         context_store=context_store,
     )
     
+    # Load skills configuration and initialize skill registry
+    skills_config_data = config_manager.load_yaml("skills.yaml")
+    skills_config = skills_config_data.get("skills", {})
+    skill_registry = SkillRegistry(skills_config, command_router)
+    skill_registry.discover_and_load()
+    loaded_count = len(skill_registry.skills)
+    logger.info(f"Loaded {loaded_count} skill(s)")
+    
     # Initialize Telegram handler
     _handler = TelegramHandler(
         token=app_config.telegram_token,
@@ -151,6 +161,7 @@ async def main() -> None:
         rate_limiter=rate_limiter,
         streaming_interval_ms=app_config.streaming_update_interval_ms,
         streaming_min_chars=app_config.streaming_min_chunk_chars,
+        skill_registry=skill_registry,
     )
     
     # Log startup
@@ -161,9 +172,10 @@ async def main() -> None:
     dashboard_state.bot_started = datetime.now()
     dashboard_state.bot_running = True
     dashboard_state.providers = {
-        name: {"status": "ready", "healthy": True} 
-        for name in providers.keys()
+        name: {"status": "ready", "healthy": provider.is_healthy}
+        for name, provider in providers.items()
     }
+    dashboard_state._providers_ref = providers
     
     # Set rate limits info for dashboard
     dashboard_state.rate_limits = {
@@ -171,8 +183,11 @@ async def main() -> None:
         "Groq TPM": {"current": 0, "limit": 14400},
     }
     
+    # Connect skill stats to dashboard state
+    dashboard_state.skill_registry = skill_registry
+    
     dashboard_port = getattr(app_config, 'dashboard_port', 8080)
-    start_dashboard_thread(host='0.0.0.0', port=dashboard_port, state=dashboard_state)
+    start_dashboard_thread(host='0.0.0.0', port=dashboard_port, state=dashboard_state, provider_manager=provider_manager)
     logger.info(f"Dashboard started at http://0.0.0.0:{dashboard_port}")
     
     # Setup shutdown event

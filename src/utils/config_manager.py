@@ -20,6 +20,7 @@ class AppConfig:
     telegram_token: str = ""
     groq_api_key: str = ""
     ollama_cloud_url: Optional[str] = None
+    ollama_api_key: Optional[str] = None
     
     # Bot settings from config.yaml
     default_provider: str = "groq"
@@ -174,6 +175,7 @@ class ConfigManager:
             telegram_token=os.getenv("TELEGRAM_BOT_TOKEN", ""),
             groq_api_key=os.getenv("GROQ_API_KEY", ""),
             ollama_cloud_url=os.getenv("OLLAMA_CLOUD_URL") or None,
+            ollama_api_key=os.getenv("OLLAMA_API_KEY") or None,
             # Bot settings
             default_provider=bot.get("default_provider", "groq"),
             default_model=bot.get("default_model", "llama-3.1-70b-versatile"),

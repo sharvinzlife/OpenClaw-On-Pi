@@ -12,7 +12,7 @@ from ..utils.context_store import ContextStore
 logger = logging.getLogger(__name__)
 
 # Bot version
-VERSION = "0.2.0"
+VERSION = "0.3.0"
 
 
 @dataclass
@@ -131,19 +131,19 @@ class CommandRouter:
         """Register core bot commands."""
         self.register("start", self.cmd_start, "guest", "Start the bot")
         self.register("help", self.cmd_help, "guest", "Show available commands")
-        self.register("status", self.cmd_status, "user", "Show bot status")
-        self.register("settings", self.cmd_settings, "user", "Show your settings")
+        self.register("status", self.cmd_status, "guest", "Show bot status")
+        self.register("settings", self.cmd_settings, "guest", "Show your settings")
         self.register("reset", self.cmd_reset, "user", "Clear conversation history")
         self.register("version", self.cmd_version, "guest", "Show bot version")
     
     def _register_provider_commands(self) -> None:
         """Register provider management commands."""
-        self.register("provider", self.cmd_provider, "user", "Show current provider")
-        self.register("switch", self.cmd_switch, "user", "Switch provider")
-        self.register("models", self.cmd_models, "user", "List available models")
-        self.register("setmodel", self.cmd_setmodel, "user", "Set preferred model")
-        self.register("tokens", self.cmd_tokens, "user", "Show token usage")
-        self.register("quota", self.cmd_quota, "user", "Show rate limit status")
+        self.register("provider", self.cmd_provider, "guest", "Show current provider")
+        self.register("switch", self.cmd_switch, "guest", "Switch provider")
+        self.register("models", self.cmd_models, "admin", "List available models")
+        self.register("setmodel", self.cmd_setmodel, "admin", "Set preferred model")
+        self.register("tokens", self.cmd_tokens, "guest", "Show token usage")
+        self.register("quota", self.cmd_quota, "guest", "Show rate limit status")
     
     def _register_admin_commands(self) -> None:
         """Register admin-only commands."""

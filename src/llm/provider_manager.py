@@ -190,6 +190,7 @@ class ProviderManager:
                 
                 # Record request (we don't know tokens for streaming)
                 self.rate_limiter.record_request(name, tokens=0)
+                logger.debug(f"Streaming via provider '{name}', model param='{model}', provider default='{provider._default_model}'")
                 
                 async for chunk in provider.stream(messages, model):
                     yield chunk
@@ -226,6 +227,31 @@ class ProviderManager:
                 order.insert(0, preferred)
         
         return order
+    
+    def set_active_provider(self, provider_name: str) -> bool:
+        """Set the globally active provider (moves it to front of priority).
+        
+        Args:
+            provider_name: Name of the provider to make active
+            
+        Returns:
+            True if set successfully
+        """
+        if provider_name not in self.providers:
+            return False
+        # Move to front of priority order
+        if provider_name in self.priority_order:
+            self.priority_order.remove(provider_name)
+        self.priority_order.insert(0, provider_name)
+        logger.info(f"Active provider set to {provider_name}")
+        return True
+    
+    def get_active_provider(self) -> str:
+        """Get the currently active (highest priority) provider name."""
+        for name in self.priority_order:
+            if name in self.providers:
+                return name
+        return list(self.providers.keys())[0] if self.providers else ""
     
     def set_user_preference(self, user_id: int, provider_name: str) -> bool:
         """Set user's preferred provider.
@@ -302,3 +328,30 @@ class ProviderManager:
             name for name, provider in self.providers.items()
             if provider.is_healthy
         ]
+    def get_all_models(self) -> dict[str, dict[str, Any]]:
+        """Get all providers with their available models, current model, and active flag."""
+        active = self.get_active_provider()
+        result: dict[str, dict[str, Any]] = {}
+        for name, provider in self.providers.items():
+            result[name] = {
+                "models": provider.get_available_models(),
+                "current": provider.current_model,
+                "active": name == active,
+            }
+        return result
+
+
+    def set_provider_model(self, provider_name: str, model_name: str) -> bool:
+        """Set the active model for a specific provider.
+
+        Args:
+            provider_name: Name of the provider
+            model_name: Name of the model to activate
+
+        Returns:
+            True if model was set successfully, False if provider not found or model invalid
+        """
+        provider = self.providers.get(provider_name)
+        if provider is None:
+            return False
+        return provider.set_model(model_name)

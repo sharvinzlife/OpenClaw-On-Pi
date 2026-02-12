@@ -38,6 +38,7 @@ class TelegramHandler:
         rate_limiter: Optional[RateLimiter] = None,
         streaming_interval_ms: int = 500,
         streaming_min_chars: int = 50,
+        skill_registry=None,
     ):
         """Initialize TelegramHandler.
         
@@ -62,6 +63,7 @@ class TelegramHandler:
         self.streaming_interval_ms = streaming_interval_ms
         self.streaming_min_chars = streaming_min_chars
         
+        self.skill_registry = skill_registry
         self.app: Optional[Application] = None
         self._running = False
     
@@ -177,9 +179,46 @@ class TelegramHandler:
         dashboard_state.active_users.add(user_id)
         dashboard_state.add_activity("command", f"@{username}: /{command}", "⚡")
         
-        # Route command
-        response = await self.command_router.route(command, user_id, args)
-        await update.message.reply_text(response)
+        # Route command — check if it's a skill with file output
+        response_text = None
+        if self.skill_registry and command in self.skill_registry.skills:
+            result = await self.skill_registry.execute_skill(command, user_id, args)
+            if result.error:
+                response_text = f"❌ {result.error}"
+                await update.message.reply_text(response_text)
+            elif result.file_path:
+                import os
+                from pathlib import Path
+                fp = Path(result.file_path)
+                caption = result.text or ""
+                response_text = caption
+                ext = fp.suffix.lower()
+                try:
+                    with open(fp, "rb") as f:
+                        if ext in (".mp4", ".webm", ".mkv", ".avi", ".mov"):
+                            await update.message.reply_video(video=f, caption=caption, read_timeout=120, write_timeout=120)
+                        elif ext in (".mp3", ".ogg", ".m4a", ".wav", ".flac", ".opus"):
+                            await update.message.reply_audio(audio=f, caption=caption, read_timeout=120, write_timeout=120)
+                        else:
+                            await update.message.reply_document(document=f, caption=caption, read_timeout=120, write_timeout=120)
+                except Exception as e:
+                    logger.error(f"Failed to send file {fp}: {e}")
+                    await update.message.reply_text(f"{caption}\n\n⚠️ File send failed: {e}")
+                finally:
+                    # Clean up temp file
+                    try:
+                        fp.unlink(missing_ok=True)
+                    except Exception:
+                        pass
+            else:
+                response_text = result.text or "✅ Done"
+                await update.message.reply_text(response_text)
+        else:
+            response_text = await self.command_router.route(command, user_id, args)
+            await update.message.reply_text(response_text)
+        
+        # Record message for dashboard feed
+        dashboard_state.add_message_record(username, f"/{command} {' '.join(args)}".strip(), response_text or "")
     
     async def _handle_message(
         self,
@@ -244,6 +283,8 @@ class TelegramHandler:
                 dashboard_state.total_tokens += len(response_text.split()) * 2
                 # Update rate limit stats
                 self._update_rate_limit_stats()
+                # Record message for dashboard feed
+                dashboard_state.add_message_record(username, user_message, response_text)
                 
         except Exception as e:
             logger.error(f"Error generating response: {e}")
@@ -305,15 +346,21 @@ class TelegramHandler:
             
             # Final update with complete response (truncated if needed)
             if full_response.strip():
-                if len(full_response) > 4000:
-                    # Split long messages
-                    await sent_message.edit_text(full_response[:4000] + "\n\n[Message truncated...]")
-                else:
-                    await sent_message.edit_text(full_response)
+                try:
+                    if len(full_response) > 4000:
+                        await sent_message.edit_text(full_response[:4000] + "\n\n[Message truncated...]")
+                    else:
+                        await sent_message.edit_text(full_response)
+                except Exception:
+                    pass  # Ignore "message not modified" errors
             else:
                 await sent_message.edit_text("(No response generated)")
                 
         except Exception as e:
+            err_msg = str(e)
+            # Don't treat "message not modified" as a real error
+            if "message is not modified" in err_msg.lower():
+                return full_response
             logger.error(f"Streaming error: {e}")
             
             # Show partial response if available

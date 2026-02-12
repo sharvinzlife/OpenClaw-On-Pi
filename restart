@@ -1,9 +1,9 @@
 #!/bin/bash
-# OpenClaw — auto-installs deps and runs the bot
+# OpenClaw — restart the bot
 cd "$(dirname "$0")"
-# Kill any existing instance
+echo "🔄 Restarting OpenClaw..."
 pkill -f "from src.main import run" 2>/dev/null
 fuser -k 8080/tcp 2>/dev/null
-sleep 1
+sleep 2
 echo "🚀 Starting OpenClaw..."
 exec uv run python -c "from src.main import run; run()"

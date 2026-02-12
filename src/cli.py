@@ -363,52 +363,20 @@ def configure_env_interactive():
     input(f"\n  {C.DARK}Press Enter to continue...{C.END}")
 
 
-def configure_paste_mode(env_file: Path):
-    """Paste-mode config with neon prompts."""
-    print(f"\n  {C.BOLD}{C.NEON_ORANGE}✨ Quick Configuration{C.END}")
-    print(f"  {C.DIM}Enter your API keys. Press Enter to skip.{C.END}\n")
-    
+def _load_env(env_file: Path) -> dict:
+    """Load existing .env values into a dict."""
     existing = {}
     if env_file.exists():
         for line in env_file.read_text().splitlines():
             if '=' in line and not line.startswith('#'):
                 key, _, value = line.partition('=')
                 existing[key.strip()] = value.strip()
-    
-    # Telegram Token
-    print(f"\n  {C.NEON_ORANGE}🦞 Telegram Bot Token{C.END}")
-    print(f"  {C.DIM}   Get from @BotFather on Telegram{C.END}")
-    cur = existing.get('TELEGRAM_BOT_TOKEN', '')
-    if cur and len(cur) > 20:
-        print(f"  {C.DIM}   Current: {cur[:10]}...{cur[-5:]}{C.END}")
-    token = get_input("Token")
-    if token:
-        existing['TELEGRAM_BOT_TOKEN'] = token
-    
-    # Groq API Key
-    print(f"\n  {C.NEON_CYAN}🧠 Groq API Key{C.END}")
-    print(f"  {C.DIM}   Get from console.groq.com{C.END}")
-    cur = existing.get('GROQ_API_KEY', '')
-    if cur and len(cur) > 20:
-        print(f"  {C.DIM}   Current: {cur[:10]}...{cur[-5:]}{C.END}")
-    groq_key = get_input("API Key")
-    if groq_key:
-        existing['GROQ_API_KEY'] = groq_key
-    
-    # Ollama Cloud URL
-    print(f"\n  {C.NEON_GREEN}☁️  Ollama Cloud URL{C.END} {C.DIM}(optional){C.END}")
-    print(f"  {C.DIM}   Your remote Ollama instance URL{C.END}")
-    cur = existing.get('OLLAMA_CLOUD_URL', '')
-    if cur:
-        print(f"  {C.DIM}   Current: {cur}{C.END}")
-    ollama_url = get_input("URL")
-    if ollama_url:
-        existing['OLLAMA_CLOUD_URL'] = ollama_url
-    
-    print()
-    spinner("Saving configuration", 0.5)
-    
-    lines = [
+    return existing
+
+
+def _save_env(env_file: Path, existing: dict):
+    """Write env dict back to .env file."""
+    out = [
         "# OpenClaw Telegram Bot - Environment Configuration",
         "",
         "# Telegram Bot Token from @BotFather",
@@ -417,39 +385,121 @@ def configure_paste_mode(env_file: Path):
         "# Groq API Key from console.groq.com",
         f"GROQ_API_KEY={existing.get('GROQ_API_KEY', '')}",
         "",
-        "# Ollama Cloud URL (optional)",
+        "# Ollama Cloud (ollama.com cloud API)",
         f"OLLAMA_CLOUD_URL={existing.get('OLLAMA_CLOUD_URL', '')}",
+        f"OLLAMA_API_KEY={existing.get('OLLAMA_API_KEY', '')}",
     ]
-    env_file.write_text('\n'.join(lines) + '\n')
-    success("Configuration saved!")
-    
-    # Admin setup
-    print(f"\n  {C.NEON_YELLOW}🔒 Admin Access Setup{C.END}")
-    print(f"  {C.DIM}   Get your Telegram User ID from @userinfobot{C.END}")
-    
-    project_dir = get_project_dir()
-    permissions_file = project_dir / "config" / "permissions.yaml"
-    
-    admin_exists = False
-    if permissions_file.exists():
-        content = permissions_file.read_text()
-        in_admins = False
-        for line in content.splitlines():
-            if line.strip() == "admins:":
-                in_admins = True
-            elif in_admins and line.strip().startswith("- ") and not line.strip().startswith("# "):
-                admin_exists = True
-                break
-            elif in_admins and not line.startswith(" ") and not line.startswith("\t"):
-                in_admins = False
-    
-    if admin_exists:
-        info("Admin already configured")
-        if confirm("Add another admin?", default=False):
-            setup_admin_user(permissions_file)
+    env_file.write_text('\n'.join(out) + '\n')
+
+
+def _mask(val: str) -> str:
+    """Mask a secret value for display."""
+    if not val:
+        return "(not set)"
+    if len(val) < 16:
+        return val[:4] + "..." + val[-3:]
+    return val[:8] + "..." + val[-4:]
+
+
+KEYS_CONFIG = [
+    {
+        "key": "TELEGRAM_BOT_TOKEN",
+        "label": "Telegram Bot Token",
+        "icon": "\U0001f99e",
+        "color_attr": "NEON_ORANGE",
+        "hint": "Get from @BotFather on Telegram",
+        "link": "https://t.me/BotFather",
+        "prompt": "Token",
+    },
+    {
+        "key": "GROQ_API_KEY",
+        "label": "Groq API Key",
+        "icon": "\U0001f9e0",
+        "color_attr": "NEON_CYAN",
+        "hint": "Sign up & get key from Groq console",
+        "link": "https://console.groq.com/keys",
+        "prompt": "API Key",
+    },
+    {
+        "key": "OLLAMA_API_KEY",
+        "label": "Ollama Cloud API Key",
+        "icon": "\U0001f511",
+        "color_attr": "NEON_GREEN",
+        "hint": "Sign up on ollama.com, then get key",
+        "link": "https://ollama.com/settings/keys",
+        "prompt": "API Key",
+    },
+    {
+        "key": "OLLAMA_CLOUD_URL",
+        "label": "Ollama Cloud URL",
+        "icon": "\u2601\ufe0f",
+        "color_attr": "NEON_GREEN",
+        "hint": "Default: https://ollama.com",
+        "link": "",
+        "prompt": "URL",
+    },
+]
+
+
+def _configure_single_key(existing: dict, cfg: dict):
+    """Prompt user for a single key value."""
+    color = getattr(C, cfg["color_attr"], C.END)
+    print(f"\n  {color}{cfg['icon']}  {cfg['label']}{C.END}")
+    if cfg.get("link"):
+        print(f"  {C.DIM}   {cfg['hint']}{C.END}")
+        print(f"  {C.NEON_BLUE}   \u2192 {cfg['link']}{C.END}")
     else:
-        if confirm("Set up admin access now?", default=True):
-            setup_admin_user(permissions_file)
+        print(f"  {C.DIM}   {cfg['hint']}{C.END}")
+    cur = existing.get(cfg["key"], "")
+    if cur:
+        print(f"  {C.DIM}   Current: {_mask(cur)}{C.END}")
+    val = get_input(cfg["prompt"])
+    if val:
+        existing[cfg["key"]] = val
+
+
+def configure_paste_mode(env_file: Path):
+    """Menu-based config — pick which key to configure."""
+    existing = _load_env(env_file)
+
+    while True:
+        clear()
+        print_mini_banner()
+        print_header("\U0001f511 API Key Configuration")
+        print(f"\n  {C.BOLD}Select a key to configure:{C.END}\n")
+
+        for i, cfg in enumerate(KEYS_CONFIG, 1):
+            color = getattr(C, cfg["color_attr"], C.END)
+            val = existing.get(cfg["key"], "")
+            if val:
+                status = f"{C.GREEN}\u2713 Set{C.END}  {C.DIM}{_mask(val)}{C.END}"
+            else:
+                status = f"{C.RED}\u2717 Not set{C.END}"
+            menu_item(str(i), f"{cfg['label']}  {status}", cfg["icon"], color)
+
+        print()
+        menu_item("a", "Configure all keys sequentially", "\u26a1", C.NEON_ORANGE)
+        menu_item("s", "Save & back", "\U0001f4be", C.NEON_GREEN)
+        print()
+
+        choice = get_input("Select option", "s")
+
+        if choice.lower() == "s":
+            break
+        elif choice.lower() == "a":
+            for cfg in KEYS_CONFIG:
+                _configure_single_key(existing, cfg)
+            spinner("Saving configuration", 0.5)
+            _save_env(env_file, existing)
+            success("All keys saved!")
+            input(f"\n  {C.DARK}Press Enter to continue...{C.END}")
+        elif choice.isdigit() and 1 <= int(choice) <= len(KEYS_CONFIG):
+            cfg = KEYS_CONFIG[int(choice) - 1]
+            _configure_single_key(existing, cfg)
+            spinner("Saving configuration", 0.5)
+            _save_env(env_file, existing)
+            success(f"{cfg['label']} saved!")
+            input(f"\n  {C.DARK}Press Enter to continue...{C.END}")
 
 
 def setup_admin_user(permissions_file: Path):
@@ -600,6 +650,7 @@ def check_status():
             ("TELEGRAM_BOT_TOKEN", "Telegram Token"),
             ("GROQ_API_KEY", "Groq API Key"),
             ("OLLAMA_CLOUD_URL", "Ollama Cloud URL"),
+            ("OLLAMA_API_KEY", "Ollama API Key"),
         ]:
             has_value = False
             for line in content.splitlines():
@@ -609,7 +660,7 @@ def check_status():
                     break
             icon = f"{C.NEON_GREEN}●{C.END}" if has_value else f"{C.NEON_YELLOW}●{C.END}"
             state = f"{C.NEON_GREEN}Configured{C.END}" if has_value else f"{C.NEON_YELLOW}Not set{C.END}"
-            opt = f" {C.DIM}(optional){C.END}" if key == "OLLAMA_CLOUD_URL" else ""
+            opt = f" {C.DIM}(optional){C.END}" if key in ("OLLAMA_CLOUD_URL", "OLLAMA_API_KEY") else ""
             print(f"    {icon} {name}: {state}{opt}")
             time.sleep(0.05)
     

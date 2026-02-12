@@ -1,0 +1,8 @@
+#!/bin/bash
+# OpenClaw — stop the bot and free port 8080
+echo "🛑 Stopping OpenClaw..."
+pkill -f "from src.main import run" 2>/dev/null
+# Kill anything holding port 8080
+fuser -k 8080/tcp 2>/dev/null
+sleep 1
+echo "✓ OpenClaw stopped"
