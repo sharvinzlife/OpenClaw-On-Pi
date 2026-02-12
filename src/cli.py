@@ -406,15 +406,22 @@ def _save_env(env_file: Path, existing: dict):
     out = [
         "# OpenClaw Telegram Bot - Environment Configuration",
         "",
-        "# Telegram Bot Token from @BotFather",
+        "# Required: Telegram Bot Token from @BotFather",
         f"TELEGRAM_BOT_TOKEN={existing.get('TELEGRAM_BOT_TOKEN', '')}",
         "",
-        "# Groq API Key from console.groq.com",
+        "# LLM Provider (need at least ONE — Groq or Ollama Cloud)",
+        "",
+        "# Groq API Key (free at console.groq.com)",
+        "# Required for: /tts and /transcribe skills",
         f"GROQ_API_KEY={existing.get('GROQ_API_KEY', '')}",
         "",
-        "# Ollama Cloud (ollama.com cloud API)",
+        "# Ollama Cloud (free at ollama.com)",
         f"OLLAMA_CLOUD_URL={existing.get('OLLAMA_CLOUD_URL', '')}",
         f"OLLAMA_API_KEY={existing.get('OLLAMA_API_KEY', '')}",
+        "",
+        "# Reddit API (optional)",
+        f"REDDIT_CLIENT_ID={existing.get('REDDIT_CLIENT_ID', '')}",
+        f"REDDIT_CLIENT_SECRET={existing.get('REDDIT_CLIENT_SECRET', '')}",
     ]
     env_file.write_text("\n".join(out) + "\n")
 
@@ -443,7 +450,7 @@ KEYS_CONFIG = [
         "label": "Groq API Key",
         "icon": "\U0001f9e0",
         "color_attr": "NEON_CYAN",
-        "hint": "Sign up & get key from Groq console",
+        "hint": "Free — needed for /tts & /transcribe skills",
         "link": "https://console.groq.com/keys",
         "prompt": "API Key",
     },
@@ -452,7 +459,7 @@ KEYS_CONFIG = [
         "label": "Ollama Cloud API Key",
         "icon": "\U0001f511",
         "color_attr": "NEON_GREEN",
-        "hint": "Sign up on ollama.com, then get key",
+        "hint": "Free — alternative LLM provider",
         "link": "https://ollama.com/settings/keys",
         "prompt": "API Key",
     },
@@ -710,17 +717,7 @@ def check_status():
                 if has_value
                 else f"{C.NEON_YELLOW}Not set{C.END}"
             )
-            opt = (
-                f" {C.DIM}(optional){C.END}"
-                if key
-                in (
-                    "OLLAMA_CLOUD_URL",
-                    "OLLAMA_API_KEY",
-                    "REDDIT_CLIENT_ID",
-                    "REDDIT_CLIENT_SECRET",
-                )
-                else ""
-            )
+            opt = f" {C.DIM}(optional){C.END}" if key != "TELEGRAM_BOT_TOKEN" else ""
             print(f"    {icon} {name}: {state}{opt}")
             time.sleep(0.05)
 
@@ -790,22 +787,28 @@ def start_bot():
             return
 
     # Check required values
-    content = env_file.read_text()
-    missing = []
-    for key in ["TELEGRAM_BOT_TOKEN", "GROQ_API_KEY"]:
-        has_value = False
-        for line in content.splitlines():
+    env_content = env_file.read_text()
+
+    def _env_has(key):
+        for line in env_content.splitlines():
             if line.startswith(f"{key}="):
-                value = line.split("=", 1)[1].strip()
-                has_value = bool(value)
-                break
-        if not has_value:
-            missing.append(key)
+                return bool(line.split("=", 1)[1].strip())
+        return False
+
+    has_telegram = _env_has("TELEGRAM_BOT_TOKEN")
+    has_groq = _env_has("GROQ_API_KEY")
+    has_ollama = _env_has("OLLAMA_API_KEY")
+
+    missing = []
+    if not has_telegram:
+        missing.append("TELEGRAM_BOT_TOKEN")
+    if not has_groq and not has_ollama:
+        missing.append("GROQ_API_KEY or OLLAMA_API_KEY (need at least one)")
 
     if missing:
         error("Missing required configuration:")
         for key in missing:
-            print(f"    {C.RED}✗{C.END} {key}")
+            print(f"    {C.RED}\u2717{C.END} {key}")
         if confirm("Configure now?"):
             configure_env_interactive()
             return

@@ -12,7 +12,7 @@ from ..utils.context_store import ContextStore
 logger = logging.getLogger(__name__)
 
 # Bot version
-VERSION = "0.3.0"
+VERSION = "0.3.1"
 
 
 @dataclass

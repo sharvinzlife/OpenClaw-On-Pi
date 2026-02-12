@@ -134,8 +134,11 @@ class ConfigManager:
         if not self.app_config.telegram_token:
             errors.append("Missing required: TELEGRAM_BOT_TOKEN")
 
-        if not self.app_config.groq_api_key:
-            errors.append("Missing required: GROQ_API_KEY")
+        # At least one LLM provider key is required (Groq or Ollama Cloud)
+        has_groq = bool(self.app_config.groq_api_key)
+        has_ollama_cloud = bool(self.app_config.ollama_api_key)
+        if not has_groq and not has_ollama_cloud:
+            errors.append("Missing required: GROQ_API_KEY or OLLAMA_API_KEY (need at least one)")
 
         # Validate at least one provider is enabled
         enabled_providers = [name for name, cfg in self.provider_configs.items() if cfg.enabled]

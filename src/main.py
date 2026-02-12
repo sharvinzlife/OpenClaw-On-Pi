@@ -183,6 +183,7 @@ async def main() -> None:
         streaming_min_chars=app_config.streaming_min_chunk_chars,
         skill_registry=skill_registry,
     )
+    _handler._groq_api_key = app_config.groq_api_key or ""
 
     # Log startup
     audit_logger.log_startup(VERSION, list(providers.keys()))

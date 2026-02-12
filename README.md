@@ -5,7 +5,8 @@
 <h1 align="center">🤖 OpenClaw-On-Pi</h1>
 
 <p align="center">
-  <strong>AI-Powered Telegram Bot with Multi-Provider LLM Support</strong><br>
+  <strong>AI-Powered Telegram Bot with Multi-Provider LLM Support</strong>
+<br>
   <em>Designed & Optimized for Raspberry Pi</em>
 </p>
 
@@ -18,7 +19,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-0.3.0-orange?style=for-the-badge" alt="Version"/>
+  <img src="https://img.shields.io/badge/Version-0.3.1-orange?style=for-the-badge" alt="Version"/>
   <img src="https://img.shields.io/badge/Python-3.9+-blue?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License"/>
   <img src="https://img.shields.io/badge/Platform-Raspberry%20Pi-C51A4A?style=for-the-badge&logo=raspberrypi&logoColor=white" alt="Platform"/>
@@ -26,8 +27,8 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Telegram-Bot-26A5E4?style=flat-square&logo=telegram&logoColor=white" alt="Telegram"/>
-  <img src="https://img.shields.io/badge/Groq-LLM-FF6B35?style=flat-square" alt="Groq"/>
-  <img src="https://img.shields.io/badge/Ollama_Cloud-☁️-10B981?style=flat-square" alt="Ollama Cloud"/>
+  <img src="https://img.shields.io/badge/Groq-LLM+Audio-FF6B35?style=flat-square" alt="Groq"/>
+  <img src="https://img.shields.io/badge/Ollama_Cloud-☁️_Free-10B981?style=flat-square" alt="Ollama Cloud"/>
   <img src="https://img.shields.io/badge/Ollama-Local%20AI-000000?style=flat-square" alt="Ollama"/>
   <img src="https://img.shields.io/badge/Flask-Dashboard-000000?style=flat-square&logo=flask&logoColor=white" alt="Flask"/>
 </p>
@@ -50,8 +51,8 @@ OpenClaw is a **production-ready AI chatbot** that runs on your Raspberry Pi and
 │         ▼                  ▼                  ▼                │
 │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐         │
 │  │    Groq    │    │   Ollama    │    │   Local     │         │
-│  │  (Primary)  │    │   Cloud     │    │   Ollama    │         │
-│  │     ⚡      │    │     ☁️      │    │     🖥️      │         │
+│  │  LLM+Audio  │    │   Cloud     │    │   Ollama    │         │
+│  │   ⚡🎙️      │    │   ☁️ Free   │    │     🖥️      │         │
 │  └─────────────┘    └─────────────┘    └─────────────┘         │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -62,7 +63,9 @@ OpenClaw is a **production-ready AI chatbot** that runs on your Raspberry Pi and
 
 | Feature | Description |
 |---------|-------------|
-| 🧠 **Multi-Provider AI** | Groq (blazing fast), Ollama Cloud (18+ models), Local Ollama (privacy) |
+| 🧠 **Multi-Provider AI** | Groq (blazing fast), Ollama Cloud (18+ models, free), Local Ollama (privacy) |
+| 🎙️ **Text-to-Speech** | Convert text to lifelike audio with Groq Orpheus TTS (6 voices + vocal directions) |
+| 🎤 **Voice Transcription** | Transcribe voice messages and audio files with Groq Whisper |
 | 🔄 **Smart Failover** | Automatic switching on rate limits or errors |
 | ⚡ **Rate Limiting** | Sliding window algorithm with proactive failover at 80% |
 | 🔐 **Permission System** | Admin, User, Guest roles with granular access |
@@ -70,7 +73,7 @@ OpenClaw is a **production-ready AI chatbot** that runs on your Raspberry Pi and
 | 📊 **Web Dashboard** | Beautiful glassy ivory-orange monitoring UI |
 | 📝 **Audit Logging** | Complete activity tracking with PII redaction |
 | 🎨 **Professional CLI** | Colorful interface with emojis |
-| 🧪 **50 Property Tests** | Comprehensive test coverage with Hypothesis |
+| 🧪 **248 Tests** | Comprehensive test coverage with Hypothesis |
 
 ---
 
@@ -109,6 +112,19 @@ Dashboard available at `http://your-pi-ip:8080`
 
 > **No manual dependency installation needed.** `./setup` and `./start` handle everything automatically.
 
+### What You Need
+
+| Requirement | Where to get it | Cost |
+|-------------|----------------|------|
+| 🍓 Raspberry Pi (or any Linux) | Python 3.9+ required | — |
+| 🤖 Telegram Bot Token | [@BotFather](https://t.me/BotFather) on Telegram | Free |
+| ⚡ Groq API Key | [console.groq.com](https://console.groq.com) | Free |
+| ☁️ Ollama Cloud Key | [ollama.com/settings/keys](https://ollama.com/settings/keys) | Free |
+| 🔴 Reddit API (optional) | [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps) | Free |
+
+> **You need at least ONE LLM provider** — either Groq or Ollama Cloud (or both). Both are free.
+> Groq is also required for the `/tts` and `/transcribe` audio skills.
+
 ### Management Scripts
 
 | Script | What it does |
@@ -142,16 +158,6 @@ nano config/permissions.yaml        # Add your Telegram user ID as admin
 ./start
 ```
 
-### What You Need
-
-| Requirement | Where to get it |
-|-------------|----------------|
-| 🍓 Raspberry Pi (or any Linux) | Python 3.9+ required |
-| 🤖 Telegram Bot Token | [@BotFather](https://t.me/BotFather) on Telegram |
-| ⚡ Groq API Key | [console.groq.com](https://console.groq.com) (free) |
-| ☁️ Ollama Cloud Key (optional) | [ollama.com/settings/keys](https://ollama.com/settings/keys) |
-| 🔴 Reddit API (optional) | [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps) (free, "script" type) |
-
 ---
 
 ## 🏗️ Architecture
@@ -179,6 +185,12 @@ flowchart TB
             OLP["LocalOllamaProvider"]
         end
 
+        subgraph Skills["🎯 Skills"]
+            SK["13 Skills"]
+            TTS["🎙️ TTS"]
+            STT["🎤 Transcribe"]
+        end
+
         subgraph Security["🔐 Security"]
             AM["AuthManager"]
             AL["AuditLogger"]
@@ -199,12 +211,17 @@ flowchart TB
     TH --> CR
     CR --> PM
     CR --> AM
+    CR --> SK
     PM --> RL
     PM --> GP
     PM --> OCP
     PM --> OLP
     GP --> GROQ
     OCP --> OLLAMA_CLOUD
+    SK --> TTS
+    SK --> STT
+    TTS --> GROQ
+    STT --> GROQ
     AM --> AL
     CR --> CS
     TH --> DS
@@ -213,37 +230,10 @@ flowchart TB
     style Pi fill:#FFF5E6,stroke:#FF6B35,stroke-width:2px
     style Bot fill:#E3F2FD,stroke:#2196F3,stroke-width:1px
     style LLM fill:#F3E5F5,stroke:#9C27B0,stroke-width:1px
+    style Skills fill:#E0F7FA,stroke:#00BCD4,stroke-width:1px
     style Security fill:#FFEBEE,stroke:#F44336,stroke-width:1px
     style Storage fill:#E8F5E9,stroke:#4CAF50,stroke-width:1px
     style Web fill:#FFF8E1,stroke:#FF9800,stroke-width:1px
-```
-
-### 📦 Module Structure
-
-```mermaid
-graph LR
-    subgraph src["📁 src/"]
-        bot["🤖 bot/"]
-        llm["🧠 llm/"]
-        security["🔐 security/"]
-        utils["🔧 utils/"]
-        web["🌐 web/"]
-    end
-
-    bot --> |"command_router.py"| CR2["16 Commands"]
-    bot --> |"telegram_handler.py"| TH2["Streaming Responses"]
-    
-    llm --> |"provider_manager.py"| PM2["Failover Logic"]
-    llm --> |"rate_limiter.py"| RL2["Sliding Window"]
-    llm --> |"*_provider.py"| PROV["3 Providers"]
-    
-    security --> |"auth.py"| AUTH["Permissions + Lockout"]
-    
-    utils --> |"config_manager.py"| CFG["YAML + ENV"]
-    utils --> |"context_store.py"| CTX["Persistence"]
-    utils --> |"audit_logger.py"| AUD["PII Redaction"]
-    
-    web --> |"dashboard.py"| DASH2["Real-time UI"]
 ```
 
 ---
@@ -255,10 +245,14 @@ graph LR
 ```env
 # Required
 TELEGRAM_BOT_TOKEN=your_bot_token_from_botfather
-GROQ_API_KEY=your_groq_api_key
 
-# Optional — Ollama Cloud (access 18+ cloud models)
-OLLAMA_API_KEY=your_ollama_cloud_api_key
+# LLM Provider — need at least ONE (both are free!)
+GROQ_API_KEY=your_groq_api_key          # Also needed for /tts and /transcribe
+OLLAMA_API_KEY=your_ollama_cloud_key    # Free at ollama.com
+
+# Optional
+REDDIT_CLIENT_ID=your_reddit_client_id
+REDDIT_CLIENT_SECRET=your_reddit_secret
 ```
 
 ### 👤 Get Your Telegram User ID
@@ -274,6 +268,49 @@ admins:
 
 ---
 
+## 🧠 Available Models
+
+### Groq Models (Chat)
+
+| Model | ID | Context | Speed | Best For |
+|-------|-----|---------|-------|----------|
+| GPT-OSS 120B | `openai/gpt-oss-120b` | 131K | 500 T/s | General purpose (default) |
+| GPT-OSS 20B | `openai/gpt-oss-20b` | 131K | 1000 T/s | Fast general purpose |
+| Llama 3.3 70B | `llama-3.3-70b-versatile` | 131K | 280 T/s | Versatile reasoning |
+| Llama 3.1 8B | `llama-3.1-8b-instant` | 131K | 560 T/s | Ultra-fast responses |
+| Llama 4 Maverick | `meta-llama/llama-4-maverick-17b-128e-instruct` | 131K | 600 T/s | Latest Llama |
+| Llama 4 Scout | `meta-llama/llama-4-scout-17b-16e-instruct` | 131K | 750 T/s | Fast Llama 4 |
+| Kimi K2 | `moonshotai/kimi-k2-instruct-0905` | 262K | 200 T/s | Long context |
+| Qwen3 32B | `qwen/qwen3-32b` | 131K | 400 T/s | Multilingual |
+| Compound | `groq/compound` | 131K | 450 T/s | AI system with web search |
+| Compound Mini | `groq/compound-mini` | 131K | 450 T/s | Lightweight AI system |
+
+### Groq Audio Models
+
+| Model | ID | Use | Skill |
+|-------|-----|-----|-------|
+| Orpheus English TTS | `canopylabs/orpheus-v1-english` | Text → Speech | `/tts` |
+| Whisper Large V3 Turbo | `whisper-large-v3-turbo` | Speech → Text | `/transcribe` |
+| Whisper Large V3 | `whisper-large-v3` | Speech → Text (highest accuracy) | `/transcribe` |
+
+### Ollama Cloud Models (18+ free models)
+
+| Model | Size | Best For |
+|-------|------|----------|
+| DeepSeek V3.2 | 671B | General reasoning (default) |
+| GLM-5 | — | Chinese + English tasks |
+| Kimi K2.5 | — | Long context reasoning |
+| Cogito 2.1 | 671B | Deep thinking |
+| Mistral Large 3 | 675B | Multilingual, code |
+| Qwen3 Coder | 480B | Code generation |
+| GPT-OSS | 120B | General purpose |
+| Gemma 3 | 27B | Lightweight tasks |
+| LFM 2.5 Thinking | — | Reasoning |
+
+Switch models from the web dashboard or via Telegram `/models` command.
+
+---
+
 ## 🎮 CLI & Management
 
 ### Shell Scripts
@@ -283,7 +320,7 @@ admins:
 | `./setup` | 🔧 First-time setup — launches the interactive CLI wizard |
 | `./start` | 🚀 Start the bot + dashboard (kills any existing instance) |
 | `./stop` | 🛑 Stop the bot and free port 8080 |
-| `./restart` | 🔄 Restart the bot (stop + start) |
+| `./restart` | 🔄 Restart the bot |
 
 ### Interactive CLI Wizard (`./setup`)
 
@@ -292,7 +329,7 @@ The CLI wizard provides a full menu-driven interface:
 | Option | Description |
 |--------|-------------|
 | `[1]` 🚀 Start the bot | Launch bot with startup sequence |
-| `[2]` �� Configure API keys | Menu-based key selector with links to get keys |
+| `[2]` 🔑 Configure API keys | Menu-based key selector with links to get keys |
 | `[3]` 🔒 Edit permissions | Manage admin/user Telegram IDs |
 | `[4]` ⚙️ Check status | Verify config, API keys, and provider health |
 | `[5]` 🧪 Run tests | Execute property-based test suite |
@@ -302,11 +339,14 @@ The CLI wizard provides a full menu-driven interface:
 
 The key configurator shows status for each key and provides direct links:
 
-| Key | Where to Get |
-|-----|-------------|
-| 🤖 Telegram Bot Token | [@BotFather](https://t.me/BotFather) on Telegram |
-| ⚡ Groq API Key | [console.groq.com/keys](https://console.groq.com/keys) |
-| 🔑 Ollama Cloud API Key | [ollama.com/settings/keys](https://ollama.com/settings/keys) |
+| Key | Where to Get | Required? |
+|-----|-------------|-----------|
+| 🤖 Telegram Bot Token | [@BotFather](https://t.me/BotFather) | Yes |
+| ⚡ Groq API Key | [console.groq.com/keys](https://console.groq.com/keys) | For audio skills |
+| 🔑 Ollama Cloud API Key | [ollama.com/settings/keys](https://ollama.com/settings/keys) | Alternative LLM |
+| 🔴 Reddit Keys | [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps) | For /reddit |
+
+> Need at least one of Groq or Ollama Cloud. Both are free!
 
 ### CLI Preview
 
@@ -318,22 +358,54 @@ The key configurator shows status for each key and provides direct links:
 
 ## 🤖 Telegram Commands
 
-
-### 👤 Guest Commands
+### 💬 Chat Commands
 | Command | Description |
 |---------|-------------|
 | `/start` | 👋 Welcome message and quick start guide |
 | `/help` | 📚 Show available commands for your role |
-
-### 👥 User Commands
-| Command | Description |
-|---------|-------------|
 | `/status` | 📊 Bot status and current provider |
 | `/provider` | 🧠 Show active AI provider details |
 | `/switch <name>` | 🔄 Switch to different AI provider |
 | `/models` | 📋 List available AI models |
 | `/reset` | 🗑️ Clear your conversation history |
 | `/quota` | 📈 Check your rate limit status |
+
+### 🎯 Skills
+| Command | Description | Requires |
+|---------|-------------|----------|
+| `/tts [voice:name] <text>` | 🎙️ Convert text to speech audio | Groq |
+| `/transcribe` | 🎤 Transcribe voice/audio (reply to a voice msg) | Groq |
+| `/weather <city>` | 🌤️ Current weather | — |
+| `/wiki <topic>` | 📖 Wikipedia summary | — |
+| `/news` | 📰 Latest headlines | — |
+| `/crypto <coin>` | 💰 Cryptocurrency prices | — |
+| `/translate <text>` | 🌐 Translate text | — |
+| `/calc <expr>` | 🧮 Calculator | — |
+| `/reddit <sub>` | 🔴 Reddit posts | Reddit API |
+| `/ytdl <url>` | 📥 Download YouTube video/audio | — |
+| `/ocr` | 📷 Extract text from images | — |
+| `/run <code>` | 🐍 Run Python code (admin) | — |
+| `/sysinfo` | 💻 System information (admin) | — |
+
+### 🎙️ TTS Voices
+
+The `/tts` skill supports 6 English voices with vocal direction tags:
+
+| Voice | Description |
+|-------|-------------|
+| `troy` | Male (default) |
+| `tara` | Female |
+| `leah` | Female |
+| `leo` | Male |
+| `jess` | Female |
+| `mia` | Female |
+
+**Vocal directions:** Wrap in brackets to control tone:
+```
+/tts [cheerful] Welcome to OpenClaw!
+/tts voice:tara [whisper] This is a secret message
+/tts voice:leo [excited] We just shipped a new feature!
+```
 
 ### 👑 Admin Commands
 | Command | Description |
@@ -375,28 +447,6 @@ Beautiful **glassy ivory-orange** design with:
 
 ---
 
-## ☁️ Ollama Cloud Models
-
-OpenClaw supports 18+ cloud models via [Ollama Cloud](https://ollama.com), including:
-
-| Model | Size | Best For |
-|-------|------|----------|
-| DeepSeek V3.2 | 671B | General reasoning (default) |
-| GLM-5 | - | Chinese + English tasks |
-| GLM-4.7 Flash | - | Fast Chinese + English |
-| Kimi K2.5 | - | Long context reasoning |
-| Cogito 2.1 | 671B | Deep thinking |
-| Mistral Large 3 | 675B | Multilingual, code |
-| Qwen3 Coder | 480B | Code generation |
-| Qwen3 Coder Next | - | Latest code model |
-| GPT-OSS | 120B | General purpose |
-| Gemma 3 | 27B | Lightweight tasks |
-| LFM 2.5 Thinking | - | Reasoning |
-
-Switch models from the web dashboard or via Telegram commands.
-
----
-
 ## 🍓 Raspberry Pi Compatibility
 
 | Model | Architecture | Status |
@@ -418,31 +468,17 @@ Switch models from the web dashboard or via Telegram commands.
 
 ## 🧪 Testing
 
-OpenClaw includes **50 property-based tests** using [Hypothesis](https://hypothesis.readthedocs.io/).
+OpenClaw includes **248 tests** (property-based + unit) using [Hypothesis](https://hypothesis.readthedocs.io/).
 
 ```bash
 # Run all tests
-./start test
-
-# Or with pytest directly
-.venv/bin/python -m pytest tests/ -v
+uv run pytest tests/ -v
 
 # Run specific test file
-.venv/bin/python -m pytest tests/property/test_auth_properties.py -v
+uv run pytest tests/property/test_auth_properties.py -v
 ```
 
 ### Test Coverage
-
-```mermaid
-pie title Test Distribution
-    "Authentication" : 9
-    "Rate Limiting" : 9
-    "Provider Routing" : 9
-    "Context Management" : 7
-    "Configuration" : 3
-    "Audit Logging" : 8
-    "Command Routing" : 5
-```
 
 | Module | Tests | Coverage |
 |--------|-------|----------|
@@ -453,6 +489,9 @@ pie title Test Distribution
 | ⚙️ Configuration | 3 | Loading, validation |
 | 📝 Audit Logging | 8 | Completeness, PII redaction |
 | 🎮 Commands | 5 | Permission filtering |
+| 🔒 Clone Export | 15 | Secret detection, archive validation |
+| 📊 Dashboard | 8 | API endpoints, model switching |
+| 🧮 Skills | 30+ | Calculator, weather, sysinfo, etc. |
 
 ---
 
@@ -464,6 +503,7 @@ OpenClaw-On-Pi/
 │   ├── .env.template            # API keys template
 │   ├── config.yaml              # App settings
 │   ├── providers.yaml           # LLM provider config
+│   ├── skills.yaml              # Skill settings
 │   └── permissions.yaml         # User permissions
 │
 ├── 📁 src/                       # Source code
@@ -472,12 +512,26 @@ OpenClaw-On-Pi/
 │   │   └── telegram_handler.py  # Message handling
 │   │
 │   ├── 📁 llm/                   # LLM providers
-│   │   ├── base_provider.py     # Abstract base
-│   │   ├── groq_provider.py     # Groq integration
+│   │   ├── groq_provider.py     # Groq (chat + audio)
 │   │   ├── ollama_cloud_provider.py
 │   │   ├── ollama_local_provider.py
 │   │   ├── provider_manager.py  # Failover logic
 │   │   └── rate_limiter.py      # Sliding window
+│   │
+│   ├── 📁 skills/                # 13 Skills
+│   │   ├── tts.py               # 🎙️ Text-to-Speech (Orpheus)
+│   │   ├── transcribe.py        # 🎤 Voice transcription (Whisper)
+│   │   ├── weather.py           # 🌤️ Weather
+│   │   ├── wiki.py              # 📖 Wikipedia
+│   │   ├── news.py              # 📰 News
+│   │   ├── crypto.py            # 💰 Crypto prices
+│   │   ├── translate.py         # 🌐 Translation
+│   │   ├── reddit.py            # 🔴 Reddit
+│   │   ├── ytdl.py              # 📥 YouTube download
+│   │   ├── ocr.py               # 📷 OCR
+│   │   ├── calc.py              # 🧮 Calculator
+│   │   ├── python_runner.py     # 🐍 Python sandbox
+│   │   └── sysinfo.py           # 💻 System info
 │   │
 │   ├── 📁 security/              # Security
 │   │   └── auth.py              # Permissions + lockout
@@ -493,57 +547,15 @@ OpenClaw-On-Pi/
 │   ├── cli.py                   # Professional CLI
 │   └── main.py                  # Entry point
 │
-├── 📁 tests/                     # Property-based tests
-│   └── 📁 property/              # Hypothesis tests
+├── 📁 tests/                     # 248 tests
+│   ├── 📁 property/              # Hypothesis property tests
+│   ├── 📁 unit/                  # Unit tests
+│   └── 📁 integration/           # Integration tests
 │
-├── 📄 start                      # Start the bot
-├── 📄 stop                       # Stop the bot
-├── 📄 restart                    # Restart the bot
+├── 📄 start / stop / restart     # Management scripts
 ├── 📄 setup                      # First-time setup wizard
-├── 📄 pyproject.toml             # Project config (uv)
-└── 📄 README.md                  # You are here!
+└── 📄 pyproject.toml             # Project config (uv)
 ```
-
----
-
-## 🔄 Provider Failover Flow
-
-```mermaid
-sequenceDiagram
-    participant U as 👤 User
-    participant B as 🤖 Bot
-    participant PM as 📊 ProviderManager
-    participant RL as ⏱️ RateLimiter
-    participant G as ⚡ Groq
-    participant O as ☁️ Ollama
-
-    U->>B: Send message
-    B->>PM: Generate response
-    PM->>RL: Check Groq limits
-    
-    alt Under 80% capacity
-        RL-->>PM: ✅ OK
-        PM->>G: Request
-        G-->>PM: Response
-    else Over 80% capacity
-        RL-->>PM: ⚠️ Proactive failover
-        PM->>O: Failover request
-        O-->>PM: Response
-    end
-    
-    PM-->>B: AI Response
-    B-->>U: Reply
-```
-
----
-
-## 🛡️ Security Features
-
-- 🔐 **Role-based Access Control** - Admin, User, Guest permissions
-- 🚫 **Auth Failure Lockout** - Automatic lockout after failed attempts
-- 🔒 **PII Redaction** - Sensitive data masked in logs
-- 📝 **Audit Trail** - Complete activity logging
-- 🔑 **API Key Protection** - Keys stored in .env, never logged
 
 ---
 
@@ -552,12 +564,14 @@ sequenceDiagram
 - [x] Multi-provider LLM support
 - [x] Smart failover with rate limiting
 - [x] Web dashboard
-- [x] Property-based testing
-- [x] Ollama Cloud support (18+ models)
+- [x] Property-based testing (248 tests)
+- [x] Ollama Cloud support (18+ free models)
 - [x] CLI setup wizard
 - [x] UV-based package management
 - [x] Dashboard model switching
-- [ ] Voice message support
+- [x] 🎙️ Text-to-Speech (Groq Orpheus)
+- [x] 🎤 Voice transcription (Groq Whisper)
+- [x] 🔴 Reddit skill
 - [ ] Image generation (DALL-E/Stable Diffusion)
 - [ ] WhatsApp integration
 - [ ] Discord bot
@@ -589,8 +603,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Built with these amazing tools:
 
 - [python-telegram-bot](https://python-telegram-bot.org/) - Telegram Bot API wrapper
-- [Groq](https://groq.com/) - Lightning-fast LLM inference
-- [Ollama](https://ollama.ai/) - Run LLMs locally
+- [Groq](https://groq.com/) - Lightning-fast LLM inference + audio
+- [Ollama](https://ollama.ai/) - Run LLMs locally or in the cloud
 - [Flask](https://flask.palletsprojects.com/) - Web dashboard
 - [Hypothesis](https://hypothesis.readthedocs.io/) - Property-based testing
 - [uv](https://docs.astral.sh/uv/) - Fast Python package manager

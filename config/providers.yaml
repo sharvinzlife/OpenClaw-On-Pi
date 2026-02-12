@@ -5,10 +5,25 @@ groq:
     requests_per_minute: 30
     tokens_per_minute: 14400
   models:
+  # Production Chat Models
   - openai/gpt-oss-120b
+  - openai/gpt-oss-20b
   - llama-3.3-70b-versatile
   - llama-3.1-8b-instant
+  # Preview Chat Models
+  - meta-llama/llama-4-maverick-17b-128e-instruct
+  - meta-llama/llama-4-scout-17b-16e-instruct
+  - moonshotai/kimi-k2-instruct-0905
+  - qwen/qwen3-32b
+  # Compound (AI Systems with tools)
+  - groq/compound
+  - groq/compound-mini
+  # Audio Models (used by /tts and /transcribe skills)
+  # - whisper-large-v3
+  # - whisper-large-v3-turbo
+  # - canopylabs/orpheus-v1-english
   default_model: openai/gpt-oss-120b
+
 ollama_cloud:
   enabled: true
   priority: 2
@@ -35,6 +50,7 @@ ollama_cloud:
   - lfm2.5-thinking
   - translategemma
   default_model: deepseek-v3.2
+
 ollama_local:
   enabled: false
   priority: 3

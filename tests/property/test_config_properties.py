@@ -178,12 +178,13 @@ class TestConfigValidationRejectsIncomplete:
     @given(
         has_telegram_token=st.booleans(),
         has_groq_key=st.booleans(),
+        has_ollama_key=st.booleans(),
     )
     @settings(max_examples=100)
-    def test_missing_required_fields_rejected(self, has_telegram_token, has_groq_key):
+    def test_missing_required_fields_rejected(self, has_telegram_token, has_groq_key, has_ollama_key):
         """Property 2: Missing required fields produce validation errors."""
-        # Skip the case where both are present (that's valid)
-        if has_telegram_token and has_groq_key:
+        # Skip the case where telegram + at least one provider key is present (that's valid)
+        if has_telegram_token and (has_groq_key or has_ollama_key):
             return
         
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -213,12 +214,14 @@ class TestConfigValidationRejectsIncomplete:
                 env_content.append("TELEGRAM_BOT_TOKEN=test_token_123")
             if has_groq_key:
                 env_content.append("GROQ_API_KEY=test_key_456")
+            if has_ollama_key:
+                env_content.append("OLLAMA_API_KEY=test_ollama_key_789")
             
             with open(config_dir / ".env", "w") as f:
                 f.write("\n".join(env_content))
             
             # Clear env vars
-            for key in ["TELEGRAM_BOT_TOKEN", "GROQ_API_KEY", "OLLAMA_CLOUD_URL"]:
+            for key in ["TELEGRAM_BOT_TOKEN", "GROQ_API_KEY", "OLLAMA_CLOUD_URL", "OLLAMA_API_KEY"]:
                 os.environ.pop(key, None)
             
             # Load and validate
@@ -231,8 +234,8 @@ class TestConfigValidationRejectsIncomplete:
             
             if not has_telegram_token:
                 assert any("TELEGRAM_BOT_TOKEN" in e for e in errors)
-            if not has_groq_key:
-                assert any("GROQ_API_KEY" in e for e in errors)
+            if not has_groq_key and not has_ollama_key:
+                assert any("GROQ_API_KEY" in e or "OLLAMA_API_KEY" in e for e in errors)
     
     @given(st.data())
     @settings(max_examples=50)

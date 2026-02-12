@@ -1,6 +1,6 @@
 [project]
 name = "openclaw-telegram-bot"
-version = "0.3.0"
+version = "0.3.1"
 description = "AI-powered Telegram bot with multi-provider LLM support"
 readme = "README.md"
 requires-python = ">=3.9"

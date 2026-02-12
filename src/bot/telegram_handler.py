@@ -176,7 +176,13 @@ class TelegramHandler:
         # Route command — check if it's a skill with file output
         response_text = None
         if self.skill_registry and command in self.skill_registry.skills:
-            result = await self.skill_registry.execute_skill(command, user_id, args)
+            result = await self.skill_registry.execute_skill(
+                command,
+                user_id,
+                args,
+                message=update.message,
+                groq_api_key=getattr(self, "_groq_api_key", ""),
+            )
             if result.error:
                 response_text = f"❌ {result.error}"
                 await update.message.reply_text(response_text)

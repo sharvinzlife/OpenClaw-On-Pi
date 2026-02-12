@@ -176,7 +176,7 @@ def loaded_config(tmp_config_dir):
     """Return a fully loaded ConfigManager."""
     # Clear env vars that might leak from the real config
     env_backup = {}
-    for key in ("TELEGRAM_BOT_TOKEN", "GROQ_API_KEY", "OLLAMA_CLOUD_URL"):
+    for key in ("TELEGRAM_BOT_TOKEN", "GROQ_API_KEY", "OLLAMA_CLOUD_URL", "OLLAMA_API_KEY"):
         env_backup[key] = os.environ.pop(key, None)
 
     cm = ConfigManager(str(tmp_config_dir))
@@ -233,7 +233,7 @@ class TestConfigurationLoading:
         """Validation catches missing TELEGRAM_BOT_TOKEN."""
         # Clear env vars
         env_backup = {}
-        for key in ("TELEGRAM_BOT_TOKEN", "GROQ_API_KEY", "OLLAMA_CLOUD_URL"):
+        for key in ("TELEGRAM_BOT_TOKEN", "GROQ_API_KEY", "OLLAMA_CLOUD_URL", "OLLAMA_API_KEY"):
             env_backup[key] = os.environ.pop(key, None)
 
         try:
@@ -255,7 +255,7 @@ class TestConfigurationLoading:
         config_dir.mkdir()
 
         env_backup = {}
-        for key in ("TELEGRAM_BOT_TOKEN", "GROQ_API_KEY", "OLLAMA_CLOUD_URL"):
+        for key in ("TELEGRAM_BOT_TOKEN", "GROQ_API_KEY", "OLLAMA_CLOUD_URL", "OLLAMA_API_KEY"):
             env_backup[key] = os.environ.pop(key, None)
 
         (config_dir / ".env").write_text(
@@ -502,7 +502,7 @@ class TestGracefulFailure:
 
         # Clear env vars
         env_backup = {}
-        for key in ("TELEGRAM_BOT_TOKEN", "GROQ_API_KEY", "OLLAMA_CLOUD_URL"):
+        for key in ("TELEGRAM_BOT_TOKEN", "GROQ_API_KEY", "OLLAMA_CLOUD_URL", "OLLAMA_API_KEY"):
             env_backup[key] = os.environ.pop(key, None)
 
         (config_dir / ".env").write_text("")
