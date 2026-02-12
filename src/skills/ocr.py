@@ -2,7 +2,6 @@
 
 import os
 import shutil
-import tempfile
 from pathlib import Path
 
 from src.skills.base_skill import BaseSkill, SkillResult
@@ -26,7 +25,7 @@ class OcrSkill(BaseSkill):
         if not image_path:
             return SkillResult(
                 error="Reply to an image with /ocr to extract text.\n"
-                      "Or send an image with /ocr as the caption."
+                "Or send an image with /ocr as the caption."
             )
 
         temp_dir = self.config.get("temp_dir", "/tmp/openclaw_ocr")
@@ -64,6 +63,7 @@ class OcrSkill(BaseSkill):
         try:
             import pytesseract  # noqa: F401
             from PIL import Image  # noqa: F401
+
             # Also check that tesseract binary is available
             if not shutil.which("tesseract"):
                 return False

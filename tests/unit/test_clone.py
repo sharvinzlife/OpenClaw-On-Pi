@@ -20,7 +20,7 @@ class TestContentContainsSecrets:
     """Tests for secret detection in content."""
 
     def test_detects_groq_api_key(self):
-        content = "GROQ_API_KEY=gsk_FAKE_TEST_KEY_00000000000000000000000000000000000000"
+        content = "GROQ_API_KEY=gsk_aB1cD2eF3gH4iJ5kL6mN7oP8qR9sT0uV1wX2yZ3aB4cD5eF6gH7"
         assert content_contains_secrets(content) is True
 
     def test_detects_telegram_token(self):
@@ -101,7 +101,7 @@ class TestFileContainsSecrets:
     def test_detects_secrets_in_file(self, tmp_path):
         secret_file = tmp_path / "secrets.env"
         secret_file.write_text(
-            "GROQ_API_KEY=gsk_FAKE_TEST_KEY_00000000000000000000000000000000000000"
+            "GROQ_API_KEY=gsk_aB1cD2eF3gH4iJ5kL6mN7oP8qR9sT0uV1wX2yZ3aB4cD5eF6gH7"
         )
         assert file_contains_secrets(secret_file) is True
 
@@ -190,7 +190,7 @@ class TestValidateNoSecrets:
         with tarfile.open(str(archive_path), "w:gz") as tar:
             import io
 
-            content = b"GROQ_API_KEY=gsk_FAKE_TEST_KEY_0000000000000000"
+            content = b"GROQ_API_KEY=gsk_aB1cD2eF3gH4iJ5kL6mN7oP8qR9sT0uV1wX2yZ3aB4cD5eF6gH7"
             info = tarfile.TarInfo(name="openclaw/config/.env")
             info.size = len(content)
             tar.addfile(info, io.BytesIO(content))
@@ -204,7 +204,7 @@ class TestValidateNoSecrets:
         with tarfile.open(str(archive_path), "w:gz") as tar:
             import io
 
-            content = b"key=gsk_FAKE_TEST_KEY_00000000000000000000000000000000000000"
+            content = b"key=gsk_aB1cD2eF3gH4iJ5kL6mN7oP8qR9sT0uV1wX2yZ3aB4cD5eF6gH7"
             info = tarfile.TarInfo(name="openclaw/leaked.txt")
             info.size = len(content)
             tar.addfile(info, io.BytesIO(content))
@@ -225,7 +225,7 @@ class TestCloneExporter:
         (config_dir / "config.yaml").write_text("bot:\n  name: test\n")
         (config_dir / "permissions.yaml").write_text("admins: []\n")
         (config_dir / ".env").write_text(
-            "GROQ_API_KEY=gsk_FAKE_TEST_KEY_00000000000000000000000000000000000000"
+            "GROQ_API_KEY=gsk_aB1cD2eF3gH4iJ5kL6mN7oP8qR9sT0uV1wX2yZ3aB4cD5eF6gH7"
         )
         src_dir = project / "src"
         src_dir.mkdir()
@@ -246,7 +246,7 @@ class TestCloneExporter:
         config_dir.mkdir()
         (config_dir / "config.yaml").write_text("bot: {}")
         (config_dir / ".env").write_text(
-            "GROQ_API_KEY=gsk_FAKE_TEST_KEY_00000000000000000000000000000000000000"
+            "GROQ_API_KEY=gsk_aB1cD2eF3gH4iJ5kL6mN7oP8qR9sT0uV1wX2yZ3aB4cD5eF6gH7"
         )
 
         output = tmp_path / "output.tar.gz"
@@ -289,7 +289,7 @@ class TestCloneExporter:
         src_dir.mkdir()
         # A source file that accidentally contains a real API key
         (src_dir / "leaked.py").write_text(
-            'API_KEY = "gsk_FAKE_TEST_KEY_00000000000000000000000000000000000000"'
+            'API_KEY = "gsk_aB1cD2eF3gH4iJ5kL6mN7oP8qR9sT0uV1wX2yZ3aB4cD5eF6gH7"'
         )
         # A clean source file
         (src_dir / "clean.py").write_text("print('hello')")

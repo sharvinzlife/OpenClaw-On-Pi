@@ -5,8 +5,7 @@ import logging
 from datetime import datetime
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
-from typing import Any, Optional
-
+from typing import Any
 
 # Patterns that should never appear in logs
 SENSITIVE_PATTERNS = [
@@ -20,7 +19,7 @@ SENSITIVE_PATTERNS = [
 
 class AuditLogger:
     """Handles security-relevant event logging with rotating files."""
-    
+
     def __init__(
         self,
         log_path: str = "logs/audit.log",
@@ -28,7 +27,7 @@ class AuditLogger:
         log_level: int = logging.INFO,
     ):
         """Initialize AuditLogger.
-        
+
         Args:
             log_path: Path to audit log file
             retention_days: Number of days to retain log files
@@ -39,15 +38,15 @@ class AuditLogger:
         self.logger = logging.getLogger("openclaw.audit")
         self.logger.setLevel(log_level)
         self._setup_rotating_handler()
-    
+
     def _setup_rotating_handler(self) -> None:
         """Configure rotating file handler."""
         # Ensure log directory exists
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Remove existing handlers to avoid duplicates
         self.logger.handlers.clear()
-        
+
         # Create rotating handler (rotates daily, keeps retention_days backups)
         handler = TimedRotatingFileHandler(
             self.log_path,
@@ -56,30 +55,29 @@ class AuditLogger:
             backupCount=self.retention_days,
             encoding="utf-8",
         )
-        
+
         # Format: timestamp | event_type | structured_data
         formatter = logging.Formatter(
-            "%(asctime)s | %(levelname)s | %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S"
+            "%(asctime)s | %(levelname)s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
         )
         handler.setFormatter(formatter)
-        
+
         self.logger.addHandler(handler)
-    
+
     def _sanitize_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Remove sensitive data from log entries.
-        
+
         Args:
             data: Data dictionary to sanitize
-            
+
         Returns:
             Sanitized copy of data
         """
         sanitized = {}
-        
+
         for key, value in data.items():
             key_lower = key.lower()
-            
+
             # Check if key contains sensitive patterns
             if any(pattern in key_lower for pattern in SENSITIVE_PATTERNS):
                 sanitized[key] = "[REDACTED]"
@@ -93,9 +91,9 @@ class AuditLogger:
                     sanitized[key] = value
             else:
                 sanitized[key] = value
-        
+
         return sanitized
-    
+
     def _log_event(
         self,
         event_type: str,
@@ -103,7 +101,7 @@ class AuditLogger:
         level: int = logging.INFO,
     ) -> None:
         """Log a structured event.
-        
+
         Args:
             event_type: Type of event (e.g., "AUTH_ATTEMPT", "ADMIN_CMD")
             data: Event data dictionary
@@ -112,10 +110,10 @@ class AuditLogger:
         sanitized = self._sanitize_data(data)
         sanitized["event_type"] = event_type
         sanitized["timestamp"] = datetime.now().isoformat()
-        
+
         message = json.dumps(sanitized, default=str)
         self.logger.log(level, message)
-    
+
     def log_auth_attempt(
         self,
         user_id: int,
@@ -123,7 +121,7 @@ class AuditLogger:
         reason: str = "",
     ) -> None:
         """Log authentication attempt.
-        
+
         Args:
             user_id: Telegram user ID
             success: Whether authentication succeeded
@@ -138,7 +136,7 @@ class AuditLogger:
             },
             level=logging.INFO if success else logging.WARNING,
         )
-    
+
     def log_admin_command(
         self,
         user_id: int,
@@ -146,7 +144,7 @@ class AuditLogger:
         args: list[str],
     ) -> None:
         """Log admin command execution.
-        
+
         Args:
             user_id: Telegram user ID of admin
             command: Command name (e.g., "/reload")
@@ -154,11 +152,10 @@ class AuditLogger:
         """
         # Sanitize args to remove potential sensitive data
         safe_args = [
-            "[REDACTED]" if any(p in str(a).lower() for p in SENSITIVE_PATTERNS)
-            else str(a)
+            "[REDACTED]" if any(p in str(a).lower() for p in SENSITIVE_PATTERNS) else str(a)
             for a in args
         ]
-        
+
         self._log_event(
             "ADMIN_COMMAND",
             {
@@ -167,7 +164,7 @@ class AuditLogger:
                 "args": safe_args,
             },
         )
-    
+
     def log_failover(
         self,
         from_provider: str,
@@ -175,7 +172,7 @@ class AuditLogger:
         reason: str,
     ) -> None:
         """Log provider failover event.
-        
+
         Args:
             from_provider: Source provider name
             to_provider: Target provider name
@@ -190,7 +187,7 @@ class AuditLogger:
             },
             level=logging.WARNING,
         )
-    
+
     def log_rate_limit(
         self,
         user_id: int,
@@ -198,7 +195,7 @@ class AuditLogger:
         limit_type: str,
     ) -> None:
         """Log rate limit violation.
-        
+
         Args:
             user_id: Telegram user ID
             provider: Provider that hit rate limit
@@ -213,10 +210,10 @@ class AuditLogger:
             },
             level=logging.WARNING,
         )
-    
+
     def log_startup(self, version: str, providers: list[str]) -> None:
         """Log bot startup.
-        
+
         Args:
             version: Bot version
             providers: List of enabled provider names
@@ -228,10 +225,10 @@ class AuditLogger:
                 "enabled_providers": providers,
             },
         )
-    
+
     def log_shutdown(self, reason: str = "normal") -> None:
         """Log bot shutdown.
-        
+
         Args:
             reason: Reason for shutdown
         """

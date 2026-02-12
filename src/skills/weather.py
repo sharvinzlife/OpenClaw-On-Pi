@@ -2,9 +2,10 @@
 
 import httpx
 
+import importlib.util
+
 from src.skills.base_skill import BaseSkill, SkillResult
 
-DEFAULT_FORMAT = "%l:+%c+%t+%h+%w+%p"
 
 
 class WeatherSkill(BaseSkill):
@@ -24,9 +25,7 @@ class WeatherSkill(BaseSkill):
         url = f"{api_url}/{location}?format=j1"
 
         try:
-            async with httpx.AsyncClient(
-                timeout=15, follow_redirects=True
-            ) as client:
+            async with httpx.AsyncClient(timeout=15, follow_redirects=True) as client:
                 resp = await client.get(url, headers={"User-Agent": "OpenClaw-Bot"})
                 resp.raise_for_status()
                 data = resp.json()
@@ -61,7 +60,9 @@ class WeatherSkill(BaseSkill):
                 return SkillResult(error=f"Location not found: {location}")
             return SkillResult(error=f"Weather API error (HTTP {e.response.status_code})")
         except httpx.ConnectError:
-            return SkillResult(error="Unable to connect to weather service — check network connection")
+            return SkillResult(
+                error="Unable to connect to weather service — check network connection"
+            )
         except httpx.RequestError as e:
             return SkillResult(error=f"Weather request failed: {e}")
         except Exception as e:
@@ -69,8 +70,4 @@ class WeatherSkill(BaseSkill):
 
     @classmethod
     def check_dependencies(cls) -> bool:
-        try:
-            import httpx  # noqa: F811
-            return True
-        except ImportError:
-            return False
+        return importlib.util.find_spec("httpx") is not None

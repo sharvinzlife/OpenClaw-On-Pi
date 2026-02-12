@@ -38,3 +38,11 @@ packages = ["src"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "black>=25.11.0",
+    "pyrefly>=0.52.0",
+    "ruff>=0.15.0",
+    "skylos>=2.5.3",
+]

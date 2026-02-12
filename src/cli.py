@@ -2,52 +2,63 @@
 """Epic Neon CLI for OpenClaw Telegram Bot - Made with ❤️ by Sharvinzlife 👑"""
 
 import os
-import sys
-import subprocess
-import shutil
-import time
 import random
+import shutil
+import subprocess
+import sys
+import time
 from pathlib import Path
 
 # ═══════════════════════════════════════════════════════════════
 # 🎨 NEON ANSI Colors & Styles
 # ═══════════════════════════════════════════════════════════════
 
+
 class C:
     """Neon color codes."""
-    BOLD = '\033[1m'
-    DIM = '\033[2m'
-    END = '\033[0m'
-    # Neon palette
-    RED = '\033[38;5;196m'
-    GREEN = '\033[38;5;46m'
-    YELLOW = '\033[38;5;226m'
-    BLUE = '\033[38;5;33m'
-    CYAN = '\033[38;5;51m'
-    MAGENTA = '\033[38;5;201m'
-    ORANGE = '\033[38;5;208m'
-    CORAL = '\033[38;5;209m'
-    SALMON = '\033[38;5;210m'
-    PEACH = '\033[38;5;216m'
-    GOLD = '\033[38;5;220m'
-    AMBER = '\033[38;5;214m'
-    PINK = '\033[38;5;213m'
-    LAVENDER = '\033[38;5;183m'
-    SKY = '\033[38;5;117m'
-    MINT = '\033[38;5;121m'
-    LIME = '\033[38;5;154m'
-    PURPLE = '\033[38;5;135m'
-    NEON_GREEN = '\033[38;5;118m'
-    NEON_PINK = '\033[38;5;199m'
-    NEON_BLUE = '\033[38;5;39m'
-    NEON_CYAN = '\033[38;5;87m'
-    NEON_ORANGE = '\033[38;5;202m'
-    NEON_YELLOW = '\033[38;5;227m'
-    WHITE = '\033[38;5;255m'
-    GRAY = '\033[38;5;245m'
-    DARK = '\033[38;5;238m'
 
-NEON = [C.NEON_PINK, C.NEON_ORANGE, C.NEON_YELLOW, C.NEON_GREEN, C.NEON_CYAN, C.NEON_BLUE, C.MAGENTA]
+    BOLD = "\033[1m"
+    DIM = "\033[2m"
+    END = "\033[0m"
+    # Neon palette
+    RED = "\033[38;5;196m"
+    GREEN = "\033[38;5;46m"
+    YELLOW = "\033[38;5;226m"
+    BLUE = "\033[38;5;33m"
+    CYAN = "\033[38;5;51m"
+    MAGENTA = "\033[38;5;201m"
+    ORANGE = "\033[38;5;208m"
+    CORAL = "\033[38;5;209m"
+    SALMON = "\033[38;5;210m"
+    PEACH = "\033[38;5;216m"
+    GOLD = "\033[38;5;220m"
+    AMBER = "\033[38;5;214m"
+    PINK = "\033[38;5;213m"
+    LAVENDER = "\033[38;5;183m"
+    SKY = "\033[38;5;117m"
+    MINT = "\033[38;5;121m"
+    LIME = "\033[38;5;154m"
+    PURPLE = "\033[38;5;135m"
+    NEON_GREEN = "\033[38;5;118m"
+    NEON_PINK = "\033[38;5;199m"
+    NEON_BLUE = "\033[38;5;39m"
+    NEON_CYAN = "\033[38;5;87m"
+    NEON_ORANGE = "\033[38;5;202m"
+    NEON_YELLOW = "\033[38;5;227m"
+    WHITE = "\033[38;5;255m"
+    GRAY = "\033[38;5;245m"
+    DARK = "\033[38;5;238m"
+
+
+NEON = [
+    C.NEON_PINK,
+    C.NEON_ORANGE,
+    C.NEON_YELLOW,
+    C.NEON_GREEN,
+    C.NEON_CYAN,
+    C.NEON_BLUE,
+    C.MAGENTA,
+]
 WARM = [C.PEACH, C.SALMON, C.CORAL, C.ORANGE, C.AMBER, C.GOLD]
 FIRE = [C.RED, C.NEON_ORANGE, C.ORANGE, C.AMBER, C.GOLD, C.NEON_YELLOW]
 
@@ -56,8 +67,9 @@ FIRE = [C.RED, C.NEON_ORANGE, C.ORANGE, C.AMBER, C.GOLD, C.NEON_YELLOW]
 # ✨ Animation Engine
 # ═══════════════════════════════════════════════════════════════
 
+
 def clear():
-    os.system('cls' if os.name == 'nt' else 'clear')
+    os.system("cls" if os.name == "nt" else "clear")
 
 
 def rainbow_text(text: str, colors=None) -> str:
@@ -72,7 +84,7 @@ def rainbow_text(text: str, colors=None) -> str:
         else:
             result.append(ch)
     result.append(C.END)
-    return ''.join(result)
+    return "".join(result)
 
 
 def neon_glow(text: str, color: str) -> str:
@@ -91,18 +103,18 @@ def typewriter(text: str, delay: float = 0.015):
 
 def spinner(msg: str, duration: float = 1.0):
     """Neon spinner animation."""
-    frames = ['◜', '◠', '◝', '◞', '◡', '◟']
+    frames = ["◜", "◠", "◝", "◞", "◡", "◟"]
     colors = [C.NEON_PINK, C.NEON_ORANGE, C.NEON_YELLOW, C.NEON_GREEN, C.NEON_CYAN, C.NEON_BLUE]
     end = time.time() + duration
     i = 0
     while time.time() < end:
         c = colors[i % len(colors)]
         f = frames[i % len(frames)]
-        sys.stdout.write(f'\r  {c}{C.BOLD}{f}{C.END} {msg}')
+        sys.stdout.write(f"\r  {c}{C.BOLD}{f}{C.END} {msg}")
         sys.stdout.flush()
         time.sleep(0.07)
         i += 1
-    sys.stdout.write(f'\r  {C.NEON_GREEN}{C.BOLD}✓{C.END} {msg}\n')
+    sys.stdout.write(f"\r  {C.NEON_GREEN}{C.BOLD}✓{C.END} {msg}\n")
     sys.stdout.flush()
 
 
@@ -113,11 +125,13 @@ def progress_bar(msg: str, duration: float = 1.0, width: int = 30):
         pct = i / steps
         filled = int(width * pct)
         # Gradient fill
-        bar = ''
+        bar = ""
         for j in range(filled):
             bar += f"{NEON[j % len(NEON)]}█"
         bar += f"{C.DARK}{'░' * (width - filled)}"
-        sys.stdout.write(f'\r  {C.GRAY}[{bar}{C.GRAY}]{C.END} {C.WHITE}{int(pct*100):3d}%{C.END} {msg}')
+        sys.stdout.write(
+            f"\r  {C.GRAY}[{bar}{C.GRAY}]{C.END} {C.WHITE}{int(pct*100):3d}%{C.END} {msg}"
+        )
         sys.stdout.flush()
         time.sleep(duration / steps)
     sys.stdout.write(f'\r  {C.NEON_GREEN}{C.BOLD}[{"█" * width}] 100%{C.END} {msg}\n')
@@ -126,16 +140,16 @@ def progress_bar(msg: str, duration: float = 1.0, width: int = 30):
 
 def matrix_rain(lines: int = 3, width: int = 60, duration: float = 0.8):
     """Quick matrix-style rain effect."""
-    chars = '01アイウエオカキクケコサシスセソ🦞'
+    chars = "01アイウエオカキクケコサシスセソ🦞"
     end = time.time() + duration
     while time.time() < end:
-        line = ''
+        line = ""
         for _ in range(width):
             if random.random() < 0.3:
                 c = random.choice([C.NEON_GREEN, C.MINT, C.LIME, C.GREEN])
                 line += f"{c}{random.choice(chars)}"
             else:
-                line += ' '
+                line += " "
         print(f"  {line}{C.END}")
         time.sleep(0.06)
 
@@ -143,13 +157,13 @@ def matrix_rain(lines: int = 3, width: int = 60, duration: float = 0.8):
 def pulse_text(text: str, cycles: int = 2):
     """Pulse text between bright and dim."""
     for _ in range(cycles):
-        sys.stdout.write(f'\r  {C.BOLD}{C.NEON_ORANGE}{text}{C.END}')
+        sys.stdout.write(f"\r  {C.BOLD}{C.NEON_ORANGE}{text}{C.END}")
         sys.stdout.flush()
         time.sleep(0.15)
-        sys.stdout.write(f'\r  {C.DIM}{C.ORANGE}{text}{C.END}')
+        sys.stdout.write(f"\r  {C.DIM}{C.ORANGE}{text}{C.END}")
         sys.stdout.flush()
         time.sleep(0.15)
-    sys.stdout.write(f'\r  {C.BOLD}{C.NEON_ORANGE}{text}{C.END}\n')
+    sys.stdout.write(f"\r  {C.BOLD}{C.NEON_ORANGE}{text}{C.END}\n")
     sys.stdout.flush()
 
 
@@ -167,13 +181,14 @@ LOBSTER_ART = r"""
    ~  ~   ~  ~
 """
 
+
 def print_banner():
     """Epic animated neon banner."""
     clear()
-    
+
     # Matrix intro
     matrix_rain(3, 60, 0.4)
-    
+
     # Banner with fire gradient
     banner = [
         "   ██████╗ ██████╗ ███████╗███╗   ██╗ ██████╗██╗      █████╗ ██╗    ██╗",
@@ -183,33 +198,37 @@ def print_banner():
         "  ╚██████╔╝██║     ███████╗██║ ╚████║╚██████╗███████╗██║  ██║╚███╔███╔╝",
         "   ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝ ╚═════╝╚══════╝╚═╝  ╚═╝ ╚══╝╚══╝",
     ]
-    
+
     print()
     for i, line in enumerate(banner):
         color = FIRE[i % len(FIRE)]
         print(f"  {C.BOLD}{color}{line}{C.END}")
         time.sleep(0.04)
-    
+
     print()
-    
+
     # Animated tagline
     tagline = "⚡ AI-Powered Telegram Bot on Raspberry Pi ⚡"
     print(f"  {rainbow_text(tagline)}")
-    
+
     # Provider badges
-    print(f"\n  {neon_glow('🧠 Groq', C.NEON_CYAN)}  {C.DARK}│{C.END}  {neon_glow('☁️  Ollama Cloud', C.NEON_GREEN)}  {C.DARK}│{C.END}  {neon_glow('🖥️  Local Ollama', C.NEON_ORANGE)}")
-    
+    print(
+        f"\n  {neon_glow('🧠 Groq', C.NEON_CYAN)}  {C.DARK}│{C.END}  {neon_glow('☁️  Ollama Cloud', C.NEON_GREEN)}  {C.DARK}│{C.END}  {neon_glow('🖥️  Local Ollama', C.NEON_ORANGE)}"
+    )
+
     # Neon separator
-    sep = '━' * 62
+    sep = "━" * 62
     print(f"\n  {rainbow_text(sep)}")
-    
+
     # Branding footer
     print_credit_line()
 
 
 def print_credit_line():
     """Print the credit/social line."""
-    print(f"\n  {C.DIM}Made with {C.END}{C.RED}❤️{C.END}{C.DIM} by {C.END}{C.BOLD}{C.NEON_ORANGE}Sharvinzlife{C.END} {C.GOLD}👑{C.END}")
+    print(
+        f"\n  {C.DIM}Made with {C.END}{C.RED}❤️{C.END}{C.DIM} by {C.END}{C.BOLD}{C.NEON_ORANGE}Sharvinzlife{C.END} {C.GOLD}👑{C.END}"
+    )
     print(f"  {C.DARK}├─{C.END} {C.NEON_BLUE}🌐 github.com/sharvinzlife{C.END}")
     print(f"  {C.DARK}├─{C.END} {C.NEON_PINK}📸 instagram.com/sharvinzlife{C.END}")
     print(f"  {C.DARK}├─{C.END} {C.NEON_CYAN}🐦 x.com/sharvinzlife{C.END}")
@@ -218,7 +237,7 @@ def print_credit_line():
 
 def print_header(text: str):
     """Neon section header."""
-    sep = '═' * 58
+    sep = "═" * 58
     print(f"\n  {C.NEON_ORANGE}{C.BOLD}{sep}{C.END}")
     typewriter(f"  {C.BOLD}{C.NEON_ORANGE}  {text}{C.END}", 0.01)
     print(f"  {C.NEON_ORANGE}{C.BOLD}{sep}{C.END}\n")
@@ -226,7 +245,9 @@ def print_header(text: str):
 
 def print_mini_banner():
     """Smaller banner for sub-screens."""
-    print(f"\n  {C.BOLD}{C.NEON_ORANGE}🦞 OpenClaw{C.END} {C.DARK}│{C.END} {C.DIM}AI Telegram Bot{C.END} {C.DARK}│{C.END} {C.DIM}Made with {C.RED}❤️{C.END}{C.DIM} by {C.NEON_ORANGE}Sharvinzlife {C.GOLD}👑{C.END}")
+    print(
+        f"\n  {C.BOLD}{C.NEON_ORANGE}🦞 OpenClaw{C.END} {C.DARK}│{C.END} {C.DIM}AI Telegram Bot{C.END} {C.DARK}│{C.END} {C.DIM}Made with {C.RED}❤️{C.END}{C.DIM} by {C.NEON_ORANGE}Sharvinzlife {C.GOLD}👑{C.END}"
+    )
     print(f"  {C.DARK}{'─' * 62}{C.END}")
 
 
@@ -234,7 +255,8 @@ def print_mini_banner():
 # 🎮 UI Components
 # ═══════════════════════════════════════════════════════════════
 
-def menu_item(key: str, text: str, emoji: str = '', color=None):
+
+def menu_item(key: str, text: str, emoji: str = "", color=None):
     """Neon menu item."""
     c = color or C.NEON_CYAN
     e = f"{emoji} " if emoji else ""
@@ -244,11 +266,14 @@ def menu_item(key: str, text: str, emoji: str = '', color=None):
 def success(text: str):
     print(f"  {C.NEON_GREEN}{C.BOLD}✓{C.END} {text}")
 
+
 def error(text: str):
     print(f"  {C.RED}{C.BOLD}✗{C.END} {text}")
 
+
 def warn(text: str):
     print(f"  {C.NEON_YELLOW}{C.BOLD}⚠{C.END} {text}")
+
 
 def info(text: str):
     print(f"  {C.NEON_CYAN}ℹ{C.END} {C.DIM}{text}{C.END}")
@@ -270,7 +295,7 @@ def confirm(prompt: str, default: bool = True) -> bool:
         val = input(f"\n  {C.NEON_ORANGE}{C.BOLD}❯{C.END} {prompt} [{d}]: ").strip().lower()
         if not val:
             return default
-        return val in ('y', 'yes')
+        return val in ("y", "yes")
     except (EOFError, KeyboardInterrupt):
         print()
         return default
@@ -290,26 +315,27 @@ def check_config_exists() -> tuple[bool, Path]:
 # 📋 Main Menu
 # ═══════════════════════════════════════════════════════════════
 
+
 def show_main_menu():
     """Epic neon main menu."""
     print_banner()
-    
+
     print(f"\n  {C.BOLD}{C.WHITE}🦞 What would you like to do?{C.END}\n")
-    
+
     items = [
-        ("1", "Start the bot",          "🚀", C.NEON_GREEN),
-        ("2", "Configure API keys",     "🔑", C.NEON_YELLOW),
-        ("3", "Edit permissions",       "🔒", C.NEON_ORANGE),
-        ("4", "Check status",           "⚙️",  C.NEON_CYAN),
-        ("5", "Run tests",              "🧪", C.NEON_BLUE),
-        ("6", "Start dashboard only",   "🌐", C.NEON_PINK),
-        ("q", "Quit",                   "👋", C.DARK),
+        ("1", "Start the bot", "🚀", C.NEON_GREEN),
+        ("2", "Configure API keys", "🔑", C.NEON_YELLOW),
+        ("3", "Edit permissions", "🔒", C.NEON_ORANGE),
+        ("4", "Check status", "⚙️", C.NEON_CYAN),
+        ("5", "Run tests", "🧪", C.NEON_BLUE),
+        ("6", "Start dashboard only", "🌐", C.NEON_PINK),
+        ("q", "Quit", "👋", C.DARK),
     ]
-    
+
     for key, text, emoji, color in items:
         menu_item(key, text, emoji, color)
         time.sleep(0.04)
-    
+
     print()
     return get_input("Select option", "1")
 
@@ -318,19 +344,20 @@ def show_main_menu():
 # 🔑 Configuration
 # ═══════════════════════════════════════════════════════════════
 
+
 def configure_env_interactive():
     """Interactive neon configuration."""
     clear()
     print_mini_banner()
     print_header("🔑 API Key Configuration")
-    
+
     project_dir = get_project_dir()
     config_dir = project_dir / "config"
     env_file = config_dir / ".env"
-    
+
     print(f"  {C.DARK}📁{C.END} Config: {C.NEON_CYAN}{config_dir}{C.END}")
     print(f"  {C.DARK}📄{C.END} Env:    {C.NEON_CYAN}{env_file}{C.END}")
-    
+
     if not env_file.exists():
         template = config_dir / ".env.template"
         if template.exists():
@@ -339,16 +366,16 @@ def configure_env_interactive():
         else:
             env_file.touch()
             success("Created new .env file")
-    
+
     print(f"\n  {C.BOLD}Choose method:{C.END}\n")
     menu_item("1", "Paste values directly (recommended)", "⚡", C.NEON_GREEN)
     menu_item("2", "Open in nano editor", "✏️", C.NEON_CYAN)
     menu_item("3", "Open in vim editor", "✏️", C.NEON_BLUE)
     menu_item("4", "Show current values", "👁️", C.NEON_YELLOW)
     menu_item("b", "Back", "↩️", C.DARK)
-    
+
     choice = get_input("Select option", "1")
-    
+
     if choice == "1":
         configure_paste_mode(env_file)
     elif choice == "2":
@@ -359,7 +386,7 @@ def configure_env_interactive():
         show_current_config(env_file)
     elif choice.lower() == "b":
         return
-    
+
     input(f"\n  {C.DARK}Press Enter to continue...{C.END}")
 
 
@@ -368,8 +395,8 @@ def _load_env(env_file: Path) -> dict:
     existing = {}
     if env_file.exists():
         for line in env_file.read_text().splitlines():
-            if '=' in line and not line.startswith('#'):
-                key, _, value = line.partition('=')
+            if "=" in line and not line.startswith("#"):
+                key, _, value = line.partition("=")
                 existing[key.strip()] = value.strip()
     return existing
 
@@ -389,7 +416,7 @@ def _save_env(env_file: Path, existing: dict):
         f"OLLAMA_CLOUD_URL={existing.get('OLLAMA_CLOUD_URL', '')}",
         f"OLLAMA_API_KEY={existing.get('OLLAMA_API_KEY', '')}",
     ]
-    env_file.write_text('\n'.join(out) + '\n')
+    env_file.write_text("\n".join(out) + "\n")
 
 
 def _mask(val: str) -> str:
@@ -529,16 +556,16 @@ def setup_admin_user(permissions_file: Path):
     if not user_id.isdigit():
         error("Invalid user ID - must be a number")
         return
-    
+
     if permissions_file.exists():
         content = permissions_file.read_text()
     else:
         content = "admins:\n\nusers:\n\nguests:\n\nsettings:\n  allow_unknown_users: false\n"
-    
+
     if f"- {user_id}" in content:
         info(f"User {user_id} already configured")
         return
-    
+
     lines = content.splitlines()
     new_lines = []
     added = False
@@ -547,8 +574,8 @@ def setup_admin_user(permissions_file: Path):
         if line.strip() == "admins:" and not added:
             new_lines.append(f"  - {user_id}  # Added via CLI setup")
             added = True
-    
-    permissions_file.write_text('\n'.join(new_lines) + '\n')
+
+    permissions_file.write_text("\n".join(new_lines) + "\n")
     success(f"Added user {user_id} as admin ⭐")
 
 
@@ -569,13 +596,13 @@ def show_current_config(env_file: Path):
         warn("No .env file found")
         return
     for line in env_file.read_text().splitlines():
-        if '=' in line and not line.startswith('#'):
-            key, _, value = line.partition('=')
+        if "=" in line and not line.startswith("#"):
+            key, _, value = line.partition("=")
             key, value = key.strip(), value.strip()
             if value and len(value) > 10:
                 masked = f"{value[:5]}{'*' * 10}{value[-3:]}"
             elif value:
-                masked = '*' * len(value)
+                masked = "*" * len(value)
             else:
                 masked = f"{C.DIM}(not set){C.END}"
             icon = f"{C.NEON_GREEN}✓{C.END}" if value else f"{C.RED}✗{C.END}"
@@ -586,25 +613,26 @@ def show_current_config(env_file: Path):
 # 🔒 Permissions, Status, Tests
 # ═══════════════════════════════════════════════════════════════
 
+
 def configure_permissions():
     """Configure user permissions."""
     clear()
     print_mini_banner()
     print_header("🔒 User Permissions")
-    
+
     project_dir = get_project_dir()
     permissions_file = project_dir / "config" / "permissions.yaml"
-    
+
     print(f"  {C.DARK}📄{C.END} File: {C.NEON_CYAN}{permissions_file}{C.END}")
     print(f"\n  {C.DIM}Get your Telegram User ID from @userinfobot{C.END}\n")
-    
+
     menu_item("1", "Add admin user ID", "⭐", C.NEON_YELLOW)
     menu_item("2", "Open in nano", "✏️", C.NEON_CYAN)
     menu_item("3", "Open in vim", "✏️", C.NEON_BLUE)
     menu_item("b", "Back", "↩️", C.DARK)
-    
+
     choice = get_input("Select option", "1")
-    
+
     if choice == "1":
         user_id = get_input("Enter your Telegram User ID")
         if user_id and user_id.isdigit():
@@ -622,7 +650,7 @@ def configure_permissions():
                         new_lines.append(f"  - {user_id}  # Added via CLI")
                         added = True
                         in_admins = False
-                permissions_file.write_text('\n'.join(new_lines) + '\n')
+                permissions_file.write_text("\n".join(new_lines) + "\n")
                 success(f"Added user {user_id} as admin")
             else:
                 info(f"User {user_id} already in config")
@@ -630,7 +658,7 @@ def configure_permissions():
         open_editor(permissions_file, "nano")
     elif choice == "3":
         open_editor(permissions_file, "vim")
-    
+
     input(f"\n  {C.DARK}Press Enter to continue...{C.END}")
 
 
@@ -639,10 +667,10 @@ def check_status():
     clear()
     print_mini_banner()
     print_header("⚙️  System Status")
-    
+
     project_dir = get_project_dir()
     config_dir = project_dir / "config"
-    
+
     # File checks with animation
     checks = [
         ("Config directory", config_dir.exists()),
@@ -651,14 +679,14 @@ def check_status():
         ("providers.yaml", (config_dir / "providers.yaml").exists()),
         ("config.yaml", (config_dir / "config.yaml").exists()),
     ]
-    
+
     print(f"  {C.BOLD}📁 Files{C.END}\n")
     for name, exists in checks:
         icon = f"{C.NEON_GREEN}●{C.END}" if exists else f"{C.RED}●{C.END}"
         state = f"{C.NEON_GREEN}Found{C.END}" if exists else f"{C.RED}Missing{C.END}"
         print(f"    {icon} {name}: {state}")
         time.sleep(0.05)
-    
+
     # API key checks
     env_file = config_dir / ".env"
     if env_file.exists():
@@ -673,25 +701,43 @@ def check_status():
             has_value = False
             for line in content.splitlines():
                 if line.startswith(f"{key}="):
-                    value = line.split('=', 1)[1].strip()
+                    value = line.split("=", 1)[1].strip()
                     has_value = bool(value)
                     break
             icon = f"{C.NEON_GREEN}●{C.END}" if has_value else f"{C.NEON_YELLOW}●{C.END}"
-            state = f"{C.NEON_GREEN}Configured{C.END}" if has_value else f"{C.NEON_YELLOW}Not set{C.END}"
-            opt = f" {C.DIM}(optional){C.END}" if key in ("OLLAMA_CLOUD_URL", "OLLAMA_API_KEY", "REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET") else ""
+            state = (
+                f"{C.NEON_GREEN}Configured{C.END}"
+                if has_value
+                else f"{C.NEON_YELLOW}Not set{C.END}"
+            )
+            opt = (
+                f" {C.DIM}(optional){C.END}"
+                if key
+                in (
+                    "OLLAMA_CLOUD_URL",
+                    "OLLAMA_API_KEY",
+                    "REDDIT_CLIENT_ID",
+                    "REDDIT_CLIENT_SECRET",
+                )
+                else ""
+            )
             print(f"    {icon} {name}: {state}{opt}")
             time.sleep(0.05)
-    
+
     # Dependencies
     print(f"\n  {C.BOLD}📦 Dependencies{C.END}\n")
-    for pkg, display in [("groq", "groq"), ("ollama", "ollama"), ("telegram", "python-telegram-bot")]:
+    for pkg, display in [
+        ("groq", "groq"),
+        ("ollama", "ollama"),
+        ("telegram", "python-telegram-bot"),
+    ]:
         try:
             __import__(pkg)
             print(f"    {C.NEON_GREEN}●{C.END} {display}: {C.NEON_GREEN}Installed{C.END}")
         except ImportError:
             print(f"    {C.RED}●{C.END} {display}: {C.RED}Not installed{C.END}")
         time.sleep(0.05)
-    
+
     input(f"\n  {C.DARK}Press Enter to continue...{C.END}")
 
 
@@ -700,23 +746,23 @@ def run_tests():
     clear()
     print_mini_banner()
     print_header("🧪 Running Tests")
-    
+
     project_dir = get_project_dir()
-    
+
     progress_bar("Loading test suite", 0.6)
     print()
-    
+
     result = subprocess.run(
         [sys.executable, "-m", "pytest", "tests/", "-v", "--tb=short"],
         cwd=project_dir,
     )
-    
+
     print()
     if result.returncode == 0:
         success("All tests passed! 🎉")
     else:
         error("Some tests failed")
-    
+
     input(f"\n  {C.DARK}Press Enter to continue...{C.END}")
 
 
@@ -724,14 +770,15 @@ def run_tests():
 # 🚀 Start Bot & Dashboard
 # ═══════════════════════════════════════════════════════════════
 
+
 def start_bot():
     """Start bot with epic neon startup sequence."""
     clear()
     print_mini_banner()
     print_header("🚀 Starting OpenClaw Bot")
-    
+
     config_ok, env_file = check_config_exists()
-    
+
     if not config_ok:
         warn("Configuration not found!")
         if confirm("Configure now?"):
@@ -741,7 +788,7 @@ def start_bot():
             info("Run configuration first.")
             input(f"\n  {C.DARK}Press Enter to continue...{C.END}")
             return
-    
+
     # Check required values
     content = env_file.read_text()
     missing = []
@@ -749,12 +796,12 @@ def start_bot():
         has_value = False
         for line in content.splitlines():
             if line.startswith(f"{key}="):
-                value = line.split('=', 1)[1].strip()
+                value = line.split("=", 1)[1].strip()
                 has_value = bool(value)
                 break
         if not has_value:
             missing.append(key)
-    
+
     if missing:
         error("Missing required configuration:")
         for key in missing:
@@ -765,7 +812,7 @@ def start_bot():
         else:
             input(f"\n  {C.DARK}Press Enter to continue...{C.END}")
             return
-    
+
     # Epic startup sequence
     print()
     progress_bar("Validating configuration", 0.5, 25)
@@ -774,26 +821,29 @@ def start_bot():
     spinner("Connecting to Telegram API", 0.5)
     progress_bar("Starting web dashboard", 0.4, 25)
     spinner("Warming up the lobster", 0.3)
-    
+
     print()
     pulse_text("🦞 OpenClaw is LIVE!")
-    
-    print(f"\n  {C.NEON_GREEN}🌐 Dashboard:{C.END} {C.BOLD}{C.NEON_CYAN}http://localhost:8080{C.END}")
+
+    print(
+        f"\n  {C.NEON_GREEN}🌐 Dashboard:{C.END} {C.BOLD}{C.NEON_CYAN}http://localhost:8080{C.END}"
+    )
     print(f"  {C.DIM}Press Ctrl+C to stop{C.END}")
-    
+
     print(f"\n  {rainbow_text('━' * 50)}")
     print_credit_line()
     print()
-    
+
     try:
         from .main import run
+
         run()
     except KeyboardInterrupt:
         print()
         info("Bot stopped by user")
     except Exception as e:
         error(f"Error: {e}")
-    
+
     input(f"\n  {C.DARK}Press Enter to continue...{C.END}")
 
 
@@ -802,30 +852,34 @@ def start_dashboard_only():
     clear()
     print_mini_banner()
     print_header("🌐 Starting Dashboard")
-    
+
     spinner("Initializing dashboard server", 0.5)
-    
-    print(f"\n  {C.NEON_GREEN}✨ Dashboard URL:{C.END} {C.BOLD}{C.NEON_CYAN}http://localhost:8080{C.END}")
+
+    print(
+        f"\n  {C.NEON_GREEN}✨ Dashboard URL:{C.END} {C.BOLD}{C.NEON_CYAN}http://localhost:8080{C.END}"
+    )
     print(f"  {C.DIM}Press Ctrl+C to stop{C.END}")
     print()
-    
+
     try:
-        from .web.dashboard import run_dashboard, DashboardState
+        from .web.dashboard import DashboardState, run_dashboard
+
         state = DashboardState()
         state.bot_running = False
-        run_dashboard(host='0.0.0.0', port=8080, state=state)
+        run_dashboard(host="0.0.0.0", port=8080, state=state)
     except KeyboardInterrupt:
         print()
         info("Dashboard stopped by user")
     except Exception as e:
         error(f"Error: {e}")
-    
+
     input(f"\n  {C.DARK}Press Enter to continue...{C.END}")
 
 
 # ═══════════════════════════════════════════════════════════════
 # 🎬 Main Entry Point
 # ═══════════════════════════════════════════════════════════════
+
 
 def main():
     """Main CLI entry point."""
@@ -844,11 +898,11 @@ def main():
         elif cmd == "status":
             check_status()
             return
-    
+
     # Interactive menu loop
     while True:
         choice = show_main_menu()
-        
+
         if choice == "1":
             start_bot()
         elif choice == "2":
@@ -866,16 +920,18 @@ def main():
             clear()
             print()
             matrix_rain(2, 60, 0.3)
-            
+
             goodbye = "Thanks for using OpenClaw! 🦞"
             print(f"\n  {rainbow_text(goodbye)}")
-            
-            print(f"\n  {C.DIM}Made with {C.END}{C.RED}❤️{C.END}{C.DIM} by {C.END}{C.BOLD}{C.NEON_ORANGE}Sharvinzlife{C.END} {C.GOLD}👑{C.END}")
+
+            print(
+                f"\n  {C.DIM}Made with {C.END}{C.RED}❤️{C.END}{C.DIM} by {C.END}{C.BOLD}{C.NEON_ORANGE}Sharvinzlife{C.END} {C.GOLD}👑{C.END}"
+            )
             print(f"  {C.DARK}├─{C.END} {C.NEON_BLUE}🌐 github.com/sharvinzlife{C.END}")
             print(f"  {C.DARK}├─{C.END} {C.NEON_PINK}📸 instagram.com/sharvinzlife{C.END}")
             print(f"  {C.DARK}├─{C.END} {C.NEON_CYAN}🐦 x.com/sharvinzlife{C.END}")
             print(f"  {C.DARK}└─{C.END} {C.BLUE}📘 fb.com/sharvinzlife{C.END}")
-            
+
             print(f"\n  {C.DIM}See you next time! {C.END}👋\n")
             break
 

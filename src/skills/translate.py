@@ -2,26 +2,44 @@
 
 import httpx
 
+import importlib.util
+
 from src.skills.base_skill import BaseSkill, SkillResult
 
 # Common language codes for quick reference
 LANG_ALIASES = {
-    "en": "en", "english": "en",
-    "es": "es", "spanish": "es",
-    "fr": "fr", "french": "fr",
-    "de": "de", "german": "de",
-    "it": "it", "italian": "it",
-    "pt": "pt", "portuguese": "pt",
-    "ru": "ru", "russian": "ru",
-    "zh": "zh", "chinese": "zh",
-    "ja": "ja", "japanese": "ja",
-    "ko": "ko", "korean": "ko",
-    "ar": "ar", "arabic": "ar",
-    "hi": "hi", "hindi": "hi",
-    "tr": "tr", "turkish": "tr",
-    "nl": "nl", "dutch": "nl",
-    "pl": "pl", "polish": "pl",
-    "sv": "sv", "swedish": "sv",
+    "en": "en",
+    "english": "en",
+    "es": "es",
+    "spanish": "es",
+    "fr": "fr",
+    "french": "fr",
+    "de": "de",
+    "german": "de",
+    "it": "it",
+    "italian": "it",
+    "pt": "pt",
+    "portuguese": "pt",
+    "ru": "ru",
+    "russian": "ru",
+    "zh": "zh",
+    "chinese": "zh",
+    "ja": "ja",
+    "japanese": "ja",
+    "ko": "ko",
+    "korean": "ko",
+    "ar": "ar",
+    "arabic": "ar",
+    "hi": "hi",
+    "hindi": "hi",
+    "tr": "tr",
+    "turkish": "tr",
+    "nl": "nl",
+    "dutch": "nl",
+    "pl": "pl",
+    "polish": "pl",
+    "sv": "sv",
+    "swedish": "sv",
 }
 
 
@@ -37,8 +55,8 @@ class TranslateSkill(BaseSkill):
         if len(args) < 2:
             return SkillResult(
                 error="Usage: /translate <target_lang> <text>\n"
-                      "Example: /translate es Hello, how are you?\n"
-                      "Languages: en, es, fr, de, it, pt, ru, zh, ja, ko, ar, hi"
+                "Example: /translate es Hello, how are you?\n"
+                "Languages: en, es, fr, de, it, pt, ru, zh, ja, ko, ar, hi"
             )
 
         target_raw = args[0].lower()
@@ -86,8 +104,4 @@ class TranslateSkill(BaseSkill):
 
     @classmethod
     def check_dependencies(cls) -> bool:
-        try:
-            import httpx  # noqa: F811
-            return True
-        except ImportError:
-            return False
+        return importlib.util.find_spec("httpx") is not None

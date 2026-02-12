@@ -5,9 +5,12 @@ Requires REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET in config/.env.
 Get them free at: https://www.reddit.com/prefs/apps (create a "script" app).
 """
 
-import httpx
-import time
 import logging
+import time
+
+import httpx
+
+import importlib.util
 
 from src.skills.base_skill import BaseSkill, SkillResult
 
@@ -60,7 +63,7 @@ class RedditSkill(BaseSkill):
         self._token_expires = time.time() + data.get("expires_in", 3600)
         return self._token
 
-    async def _api_get(self, path: str, params: dict = None) -> dict:
+    async def _api_get(self, path: str, params: dict | None = None) -> dict:
         """Make authenticated GET request to Reddit API."""
         token = await self._get_token()
         url = f"{API_BASE}{path}"
@@ -78,14 +81,16 @@ class RedditSkill(BaseSkill):
 
     async def execute(self, user_id: int, args: list[str], **kwargs) -> SkillResult:
         if not self._client_id:
-            return SkillResult(error=(
-                "Reddit not configured. To set up:\n"
-                "1. Go to https://www.reddit.com/prefs/apps\n"
-                "2. Create a 'script' type app\n"
-                "3. Add to config/.env:\n"
-                "   REDDIT_CLIENT_ID=your_id\n"
-                "   REDDIT_CLIENT_SECRET=your_secret"
-            ))
+            return SkillResult(
+                error=(
+                    "Reddit not configured. To set up:\n"
+                    "1. Go to https://www.reddit.com/prefs/apps\n"
+                    "2. Create a 'script' type app\n"
+                    "3. Add to config/.env:\n"
+                    "   REDDIT_CLIENT_ID=your_id\n"
+                    "   REDDIT_CLIENT_SECRET=your_secret"
+                )
+            )
 
         if not args:
             return SkillResult(error=self._usage())
@@ -118,9 +123,7 @@ class RedditSkill(BaseSkill):
         subreddit = args[0].strip().lstrip("r/")
         limit = min(int(args[1]) if len(args) > 1 and args[1].isdigit() else 5, 10)
 
-        data = await self._api_get(
-            f"/r/{subreddit}/{sort}", {"limit": limit, "raw_json": 1}
-        )
+        data = await self._api_get(f"/r/{subreddit}/{sort}", {"limit": limit, "raw_json": 1})
 
         posts = data.get("data", {}).get("children", [])
         if not posts:
@@ -243,8 +246,4 @@ class RedditSkill(BaseSkill):
 
     @classmethod
     def check_dependencies(cls) -> bool:
-        try:
-            import httpx  # noqa: F811
-            return True
-        except ImportError:
-            return False
+        return importlib.util.find_spec("httpx") is not None

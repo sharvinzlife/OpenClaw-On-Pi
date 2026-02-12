@@ -31,7 +31,7 @@ SECRET_PATTERNS: List[re.Pattern] = [
 # Placeholder values that should NOT be flagged as secrets
 PLACEHOLDER_SUFFIXES = {"_here", "_token_here", "_key_here", "your_", ""}
 PLACEHOLDER_PATTERN = re.compile(
-    r"(?:your_\w+_here|your_\w+|placeholder|example|changeme|xxx+)",
+    r"(?:your_\w+_here|your_\w+|placeholder|example|changeme|\bx{3,}\b)",
     re.IGNORECASE,
 )
 

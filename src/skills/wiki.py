@@ -2,6 +2,8 @@
 
 import httpx
 
+import importlib.util
+
 from src.skills.base_skill import BaseSkill, SkillResult
 
 
@@ -59,8 +61,4 @@ class WikiSkill(BaseSkill):
 
     @classmethod
     def check_dependencies(cls) -> bool:
-        try:
-            import httpx  # noqa: F811
-            return True
-        except ImportError:
-            return False
+        return importlib.util.find_spec("httpx") is not None

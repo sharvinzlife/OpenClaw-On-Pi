@@ -6,7 +6,6 @@ import os
 import shutil
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 from src.skills.base_skill import BaseSkill, SkillResult
@@ -57,13 +56,13 @@ class YtdlSkill(BaseSkill):
         if missing:
             return SkillResult(
                 error=f"Missing required system dependencies: {', '.join(missing)}. "
-                      "Install with: apt-get install ffmpeg"
+                "Install with: apt-get install ffmpeg"
             )
 
         if not args:
             return SkillResult(
                 error="Usage: /ytdl <url> [audio|video]\n"
-                      "Example: /ytdl https://youtube.com/watch?v=... audio"
+                "Example: /ytdl https://youtube.com/watch?v=... audio"
             )
 
         # Parse args: URL is first, optional format is second
@@ -89,36 +88,55 @@ class YtdlSkill(BaseSkill):
         loop.run_in_executor(None, _auto_update_ytdlp)
 
         # Build yt-dlp command
-        output_template = os.path.join(temp_dir, f"%(id)s.%(ext)s")
+        output_template = os.path.join(temp_dir, "%(id)s.%(ext)s")
 
         cmd = [sys.executable, "-m", "yt_dlp", "--no-playlist", "--no-warnings"]
 
         if fmt == "audio":
             cmd += [
-                "-x", "--audio-format", "mp3",
-                "--audio-quality", "5",
-                "-o", output_template,
-                "--max-filesize", f"{max_size_mb}M",
+                "-x",
+                "--audio-format",
+                "mp3",
+                "--audio-quality",
+                "5",
+                "-o",
+                output_template,
+                "--max-filesize",
+                f"{max_size_mb}M",
                 url,
             ]
         else:
             cmd += [
-                "-f", "best[ext=mp4][filesize<50M]/best[ext=mp4]/best", "--merge-output-format", "mp4",
-                "-o", output_template,
-                "--max-filesize", f"{max_size_mb}M",
+                "-f",
+                "best[ext=mp4][filesize<50M]/best[ext=mp4]/best",
+                "--merge-output-format",
+                "mp4",
+                "-o",
+                output_template,
+                "--max-filesize",
+                f"{max_size_mb}M",
                 url,
             ]
 
         try:
             # Get info first for the title
             info_cmd = [
-                sys.executable, "-m", "yt_dlp",
-                "--no-playlist", "--print", "%(title)s", "--print", "%(duration)s",
+                sys.executable,
+                "-m",
+                "yt_dlp",
+                "--no-playlist",
+                "--print",
+                "%(title)s",
+                "--print",
+                "%(duration)s",
                 url,
             ]
             info_result = await asyncio.to_thread(
-                subprocess.run, info_cmd,
-                capture_output=True, text=True, timeout=30,
+                subprocess.run,
+                info_cmd,
+                capture_output=True,
+                text=True,
+                timeout=30,
             )
             title = "Unknown"
             duration = "?"
@@ -135,8 +153,11 @@ class YtdlSkill(BaseSkill):
 
             # Download
             dl_result = await asyncio.to_thread(
-                subprocess.run, cmd,
-                capture_output=True, text=True, timeout=120,
+                subprocess.run,
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=120,
             )
 
             if dl_result.returncode != 0:
@@ -152,7 +173,9 @@ class YtdlSkill(BaseSkill):
             size_mb = downloaded.stat().st_size / (1024 * 1024)
             if size_mb > max_size_mb:
                 downloaded.unlink(missing_ok=True)
-                return SkillResult(error=f"File too large ({size_mb:.1f}MB > {max_size_mb}MB limit)")
+                return SkillResult(
+                    error=f"File too large ({size_mb:.1f}MB > {max_size_mb}MB limit)"
+                )
 
             return SkillResult(
                 text=f"🎵 {title} ({duration})\n📁 {size_mb:.1f}MB",

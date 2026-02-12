@@ -81,22 +81,16 @@ class SkillRegistry:
         command = skill_class.command
 
         if not skill_name or not command:
-            logger.warning(
-                f"Skill class {skill_class.__name__} missing name or command, skipping"
-            )
+            logger.warning(f"Skill class {skill_class.__name__} missing name or command, skipping")
             return
 
         # Check dependencies
         try:
             if not skill_class.check_dependencies():
-                logger.warning(
-                    f"Skill '{skill_name}' missing dependencies, skipping"
-                )
+                logger.warning(f"Skill '{skill_name}' missing dependencies, skipping")
                 return
         except Exception as e:
-            logger.warning(
-                f"Skill '{skill_name}' dependency check failed: {e}, skipping"
-            )
+            logger.warning(f"Skill '{skill_name}' dependency check failed: {e}, skipping")
             return
 
         # Get skill-specific config (default to enabled: true if not in config)
@@ -120,9 +114,7 @@ class SkillRegistry:
 
         # Create a handler closure that routes through execute_skill.
         # Use a default argument to capture the current command value.
-        async def handler(
-            user_id: int, args: list[str], _cmd=command, **kwargs
-        ) -> str:
+        async def handler(user_id: int, args: list[str], _cmd=command, **kwargs) -> str:
             result = await self.execute_skill(_cmd, user_id, args, **kwargs)
             if result.error:
                 return f"❌ {result.error}"

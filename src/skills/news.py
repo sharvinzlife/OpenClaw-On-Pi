@@ -2,6 +2,8 @@
 
 import feedparser
 
+import importlib.util
+
 from src.skills.base_skill import BaseSkill, SkillResult
 
 DEFAULT_FEEDS = [
@@ -32,7 +34,7 @@ class NewsSkill(BaseSkill):
                 parsed = feedparser.parse(feed_url)
                 source = parsed.feed.get("title", feed_url)
 
-                for entry in parsed.entries[:max_headlines * 2]:
+                for entry in parsed.entries[: max_headlines * 2]:
                     title = entry.get("title", "").strip()
                     link = entry.get("link", "")
                     published = entry.get("published", "")
@@ -43,12 +45,14 @@ class NewsSkill(BaseSkill):
                     if keyword and keyword not in title.lower():
                         continue
 
-                    headlines.append({
-                        "source": source,
-                        "title": title,
-                        "link": link,
-                        "published": published,
-                    })
+                    headlines.append(
+                        {
+                            "source": source,
+                            "title": title,
+                            "link": link,
+                            "published": published,
+                        }
+                    )
             except Exception:
                 continue
 
@@ -78,8 +82,4 @@ class NewsSkill(BaseSkill):
 
     @classmethod
     def check_dependencies(cls) -> bool:
-        try:
-            import feedparser  # noqa: F811
-            return True
-        except ImportError:
-            return False
+        return importlib.util.find_spec("feedparser") is not None

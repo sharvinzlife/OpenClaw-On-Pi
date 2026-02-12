@@ -2,6 +2,8 @@
 
 import httpx
 
+import importlib.util
+
 from src.skills.base_skill import BaseSkill, SkillResult
 
 # Common aliases so users can type /crypto btc instead of /crypto bitcoin
@@ -85,15 +87,13 @@ class CryptoSkill(BaseSkill):
 
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
-                return SkillResult(error=f"Coin not found: {query}\nTry the full name (e.g. 'bitcoin') or common aliases (btc, eth, sol)")
+                return SkillResult(
+                    error=f"Coin not found: {query}\nTry the full name (e.g. 'bitcoin') or common aliases (btc, eth, sol)"
+                )
             return SkillResult(error=f"CoinGecko API error: {e.response.status_code}")
         except Exception as e:
             return SkillResult(error=f"Failed to fetch crypto data: {e}")
 
     @classmethod
     def check_dependencies(cls) -> bool:
-        try:
-            import httpx  # noqa: F811
-            return True
-        except ImportError:
-            return False
+        return importlib.util.find_spec("httpx") is not None

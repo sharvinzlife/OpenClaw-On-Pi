@@ -1,17 +1,17 @@
 """Web dashboard for OpenClaw bot monitoring."""
 
-import json
 import threading
 from dataclasses import dataclass
 from datetime import datetime
-from pathlib import Path
 from typing import Optional
-from flask import Flask, render_template_string, jsonify, request
+
+from flask import Flask, jsonify, render_template_string, request
 
 
 @dataclass
 class MessageRecord:
     """A single message exchange between user and bot."""
+
     username: str
     user_message: str
     bot_response: str
@@ -20,7 +20,7 @@ class MessageRecord:
 
 class DashboardState:
     """Shared state between bot and dashboard."""
-    
+
     def __init__(self):
         self.bot_started: Optional[datetime] = None
         self.bot_running: bool = False
@@ -32,7 +32,7 @@ class DashboardState:
         self.rate_limits: dict = {}
         self.skill_registry = None  # Set by main.py after skill loading
         self.message_feed: list[MessageRecord] = []
-    
+
     def to_dict(self) -> dict:
         uptime = ""
         if self.bot_started:
@@ -40,7 +40,7 @@ class DashboardState:
             hours, remainder = divmod(int(delta.total_seconds()), 3600)
             minutes, seconds = divmod(remainder, 60)
             uptime = f"{hours}h {minutes}m {seconds}s"
-        
+
         return {
             "bot_running": self.bot_running,
             "uptime": uptime,
@@ -52,28 +52,30 @@ class DashboardState:
             "rate_limits": self.rate_limits,
             "skills": self._get_skill_stats(),
         }
-    
+
     def _get_live_providers(self) -> dict:
         """Get provider status with live health checks."""
-        ref = getattr(self, '_providers_ref', None)
+        ref = getattr(self, "_providers_ref", None)
         if ref:
             return {
                 name: {"status": "ready" if p.is_healthy else "offline", "healthy": p.is_healthy}
                 for name, p in ref.items()
             }
         return self.providers
-    
+
     def add_activity(self, activity_type: str, text: str, icon: str = "💬"):
         """Add activity to recent list."""
-        self.recent_activity.append({
-            "type": activity_type,
-            "text": text,
-            "icon": icon,
-            "time": datetime.now().strftime("%H:%M:%S"),
-        })
+        self.recent_activity.append(
+            {
+                "type": activity_type,
+                "text": text,
+                "icon": icon,
+                "time": datetime.now().strftime("%H:%M:%S"),
+            }
+        )
         if len(self.recent_activity) > 50:
             self.recent_activity = self.recent_activity[-50:]
-    
+
     def add_message_record(self, username: str, user_message: str, bot_response: str) -> None:
         """Record a message exchange. Capped at 100 records."""
         record = MessageRecord(
@@ -85,7 +87,7 @@ class DashboardState:
         self.message_feed.append(record)
         if len(self.message_feed) > 100:
             self.message_feed = self.message_feed[-100:]
-    
+
     def _get_skill_stats(self) -> dict:
         """Get skill stats from the registry for dashboard display."""
         if not self.skill_registry:
@@ -97,11 +99,7 @@ class DashboardState:
                 "total_executions": skill_stats.total_executions,
                 "success_count": skill_stats.success_count,
                 "failure_count": skill_stats.failure_count,
-                "last_used": (
-                    skill_stats.last_used.isoformat()
-                    if skill_stats.last_used
-                    else None
-                ),
+                "last_used": (skill_stats.last_used.isoformat() if skill_stats.last_used else None),
             }
         return stats
 
@@ -112,7 +110,7 @@ _provider_manager = None
 
 
 # HTML Template with Peachy Ivory Glassy Aero Design + Animated Orbs
-DASHBOARD_HTML = '''
+DASHBOARD_HTML = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1128,7 +1126,7 @@ DASHBOARD_HTML = '''
     </script>
 </body>
 </html>
-'''
+"""
 
 
 def create_dashboard_app(state: Optional[DashboardState] = None, provider_manager=None) -> Flask:
@@ -1137,92 +1135,117 @@ def create_dashboard_app(state: Optional[DashboardState] = None, provider_manage
     if state:
         dashboard_state = state
     _provider_manager = provider_manager
-    
+
     app = Flask(__name__)
-    
-    @app.route('/')
+
+    @app.route("/")
     def index():
         return render_template_string(DASHBOARD_HTML)
-    
-    @app.route('/api/status')
+
+    @app.route("/api/status")
     def api_status():
         return jsonify(dashboard_state.to_dict())
-    
-    @app.route('/api/models')
+
+    @app.route("/api/models")
     def api_models():
         if not _provider_manager:
             return jsonify({"error": "Provider manager not available"}), 503
         return jsonify({"providers": _provider_manager.get_all_models()})
-    
-    @app.route('/api/model', methods=['POST'])
+
+    @app.route("/api/model", methods=["POST"])
     def api_set_model():
         if not _provider_manager:
             return jsonify({"success": False, "error": "Provider manager not available"}), 503
         data = request.get_json()
-        if not data or 'provider' not in data or 'model' not in data:
-            return jsonify({"success": False, "error": "Missing 'provider' and/or 'model' in request body"}), 400
-        provider_name = data['provider']
-        model_name = data['model']
+        if not data or "provider" not in data or "model" not in data:
+            return (
+                jsonify(
+                    {"success": False, "error": "Missing 'provider' and/or 'model' in request body"}
+                ),
+                400,
+            )
+        provider_name = data["provider"]
+        model_name = data["model"]
         result = _provider_manager.set_provider_model(provider_name, model_name)
         if result:
             return jsonify({"success": True, "provider": provider_name, "model": model_name})
         else:
-            return jsonify({"success": False, "error": f"Failed to set model '{model_name}' on provider '{provider_name}'"}), 400
-    
-    @app.route('/api/active-provider', methods=['POST'])
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": f"Failed to set model '{model_name}' on provider '{provider_name}'",
+                    }
+                ),
+                400,
+            )
+
+    @app.route("/api/active-provider", methods=["POST"])
     def api_set_active_provider():
         if not _provider_manager:
             return jsonify({"success": False, "error": "Provider manager not available"}), 503
         data = request.get_json()
-        if not data or 'provider' not in data:
+        if not data or "provider" not in data:
             return jsonify({"success": False, "error": "Missing 'provider'"}), 400
-        result = _provider_manager.set_active_provider(data['provider'])
+        result = _provider_manager.set_active_provider(data["provider"])
         if result:
-            return jsonify({"success": True, "active": data['provider']})
+            return jsonify({"success": True, "active": data["provider"]})
         return jsonify({"success": False, "error": f"Provider '{data['provider']}' not found"}), 400
-    
-    @app.route('/api/messages')
+
+    @app.route("/api/messages")
     def api_messages():
-        after = request.args.get('after', -1, type=int)
+        after = request.args.get("after", -1, type=int)
         feed = dashboard_state.message_feed
         total = len(feed)
         if after >= 0 and after < total:
-            messages = feed[after + 1:]
+            messages = feed[after + 1 :]
         else:
             messages = feed
-        return jsonify({
-            "messages": [
-                {
-                    "username": m.username,
-                    "user_message": m.user_message,
-                    "bot_response": m.bot_response,
-                    "timestamp": m.timestamp,
-                }
-                for m in messages
-            ],
-            "total": total,
-        })
-    
+        return jsonify(
+            {
+                "messages": [
+                    {
+                        "username": m.username,
+                        "user_message": m.user_message,
+                        "bot_response": m.bot_response,
+                        "timestamp": m.timestamp,
+                    }
+                    for m in messages
+                ],
+                "total": total,
+            }
+        )
+
     return app
 
 
-def run_dashboard(host: str = '0.0.0.0', port: int = 8080, state: Optional[DashboardState] = None, provider_manager=None):
+def run_dashboard(
+    host: str = "0.0.0.0",
+    port: int = 8080,
+    state: Optional[DashboardState] = None,
+    provider_manager=None,
+):
     """Run the dashboard server."""
     app = create_dashboard_app(state, provider_manager=provider_manager)
     app.run(host=host, port=port, debug=False, threaded=True)
 
 
-def start_dashboard_thread(host: str = '0.0.0.0', port: int = 8080, state: Optional[DashboardState] = None, provider_manager=None) -> threading.Thread:
+def start_dashboard_thread(
+    host: str = "0.0.0.0",
+    port: int = 8080,
+    state: Optional[DashboardState] = None,
+    provider_manager=None,
+) -> threading.Thread:
     """Start dashboard in a background thread."""
     global dashboard_state, _provider_manager
     if state:
         dashboard_state = state
     _provider_manager = provider_manager
-    
+
     thread = threading.Thread(
         target=run_dashboard,
-        kwargs={'host': host, 'port': port, 'state': state, 'provider_manager': provider_manager},
-        daemon=True
+        kwargs={"host": host, "port": port, "state": state, "provider_manager": provider_manager},
+        daemon=True,
     )
     thread.start()
     return thread
