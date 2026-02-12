@@ -1,9 +1,31 @@
 #!/bin/bash
-# OpenClaw — auto-installs deps and runs the bot
+# ═══════════════════════════════════════════
+# OpenClaw — Start the bot
+# Auto-installs uv + deps if needed
+# ═══════════════════════════════════════════
 cd "$(dirname "$0")"
+
+# Ensure uv is available
+if ! command -v uv &>/dev/null; then
+    if [ -f "$HOME/.local/bin/uv" ]; then
+        export PATH="$HOME/.local/bin:$PATH"
+    else
+        echo "⚠️  uv not found. Run ./setup first, or install manually:"
+        echo "   curl -LsSf https://astral.sh/uv/install.sh | sh"
+        exit 1
+    fi
+fi
+
+# Auto-install deps if .venv doesn't exist
+if [ ! -d ".venv" ]; then
+    echo "📦 First run — installing dependencies..."
+    uv sync --quiet 2>/dev/null || uv sync
+fi
+
 # Kill any existing instance
 pkill -f "from src.main import run" 2>/dev/null
 fuser -k 8080/tcp 2>/dev/null
 sleep 1
+
 echo "🚀 Starting OpenClaw..."
 exec uv run python -c "from src.main import run; run()"

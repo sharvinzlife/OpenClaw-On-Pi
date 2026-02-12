@@ -84,13 +84,7 @@ OpenClaw is a **production-ready AI chatbot** that runs on your Raspberry Pi and
 
 ## 🚀 Quick Start
 
-### Prerequisites
-
-- 🍓 Raspberry Pi (any model with Python 3.9+)
-- 📱 Telegram account
-- 🔑 Groq API key (free at [console.groq.com](https://console.groq.com))
-
-### One-Command Setup (Recommended)
+### Install & Run (3 commands)
 
 ```bash
 git clone https://github.com/sharvinzlife/OpenClaw-On-Pi.git
@@ -98,31 +92,35 @@ cd OpenClaw-On-Pi
 ./setup
 ```
 
-That's it. `./setup` will:
-1. Install [uv](https://docs.astral.sh/uv/) (fast Python package manager) if not present
-2. Install all dependencies via `uv sync`
-3. Launch the interactive CLI wizard to configure API keys
+`./setup` automatically handles everything:
+- ✅ Checks Python 3.9+ is installed
+- ✅ Installs [uv](https://docs.astral.sh/uv/) (fast Python package manager) if not present
+- ✅ Installs all dependencies (`uv sync`)
+- ✅ Creates `config/.env` from template
+- ✅ Launches the interactive CLI wizard to configure API keys
 
-Then start the bot:
+After setup, start the bot:
 
 ```bash
 ./start
 ```
 
-The dashboard will be available at `http://your-pi-ip:8080`
+Dashboard available at `http://your-pi-ip:8080`
+
+> **No manual dependency installation needed.** `./setup` and `./start` handle everything automatically.
 
 ### Management Scripts
 
-```bash
-./setup     # 🔧 First-time setup + CLI wizard
-./start     # 🚀 Start the bot + dashboard
-./stop      # 🛑 Stop everything
-./restart   # 🔄 Restart the bot
-```
+| Script | What it does |
+|--------|-------------|
+| `./setup` | Install deps + launch CLI wizard (run once) |
+| `./start` | Start bot + dashboard (auto-installs deps if needed) |
+| `./stop` | Stop the bot and free port 8080 |
+| `./restart` | Restart the bot |
 
-### Manual Installation
+### Manual Installation (Advanced)
 
-If you prefer to set things up manually:
+If you prefer full control:
 
 ```bash
 # 1. Clone
@@ -132,20 +130,27 @@ cd OpenClaw-On-Pi
 # 2. Install uv (Python package manager)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 3. Install dependencies
+# 3. Install all dependencies
 uv sync
 
-# 4. Configure API keys via CLI wizard
-uv run python -m src.cli
-# → Select [2] Configure API keys
-# → Add Telegram token, Groq key, and optionally Ollama Cloud key
+# 4. Configure
+cp config/.env.template config/.env
+nano config/.env                    # Add your API keys
+nano config/permissions.yaml        # Add your Telegram user ID as admin
 
-# 5. Add yourself as admin
-nano config/permissions.yaml  # Add your Telegram user ID
-
-# 6. Start
+# 5. Start
 ./start
 ```
+
+### What You Need
+
+| Requirement | Where to get it |
+|-------------|----------------|
+| 🍓 Raspberry Pi (or any Linux) | Python 3.9+ required |
+| 🤖 Telegram Bot Token | [@BotFather](https://t.me/BotFather) on Telegram |
+| ⚡ Groq API Key | [console.groq.com](https://console.groq.com) (free) |
+| ☁️ Ollama Cloud Key (optional) | [ollama.com/settings/keys](https://ollama.com/settings/keys) |
+| 🔴 Reddit API (optional) | [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps) (free, "script" type) |
 
 ---
 

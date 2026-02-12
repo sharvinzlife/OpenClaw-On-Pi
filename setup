@@ -1,4 +1,61 @@
 #!/bin/bash
-# OpenClaw — interactive setup wizard
+# ═══════════════════════════════════════════
+# OpenClaw — One-Command Setup
+# Installs uv, dependencies, and launches CLI wizard
+# ═══════════════════════════════════════════
+set -e
 cd "$(dirname "$0")"
+
+echo ""
+echo "  🦞 OpenClaw Setup"
+echo "  ═══════════════════"
+echo ""
+
+# 1. Check Python
+if ! command -v python3 &>/dev/null; then
+    echo "  ❌ Python 3 not found. Please install Python 3.9+ first."
+    echo "     sudo apt install python3"
+    exit 1
+fi
+
+PY_VERSION=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+echo "  ✓ Python $PY_VERSION found"
+
+# 2. Install uv if not present
+if command -v uv &>/dev/null; then
+    echo "  ✓ uv already installed ($(uv --version 2>/dev/null || echo 'unknown'))"
+elif [ -f "$HOME/.local/bin/uv" ]; then
+    export PATH="$HOME/.local/bin:$PATH"
+    echo "  ✓ uv found at ~/.local/bin/uv"
+else
+    echo "  📦 Installing uv (fast Python package manager)..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh 2>/dev/null
+    export PATH="$HOME/.local/bin:$PATH"
+    if command -v uv &>/dev/null; then
+        echo "  ✓ uv installed successfully"
+    else
+        echo "  ❌ Failed to install uv. Install manually:"
+        echo "     curl -LsSf https://astral.sh/uv/install.sh | sh"
+        exit 1
+    fi
+fi
+
+# 3. Install dependencies
+echo "  📦 Installing dependencies..."
+uv sync --quiet 2>/dev/null || uv sync
+echo "  ✓ Dependencies installed"
+
+# 4. Create config/.env if it doesn't exist
+if [ ! -f config/.env ]; then
+    if [ -f config/.env.template ]; then
+        cp config/.env.template config/.env
+        echo "  ✓ Created config/.env from template"
+    fi
+fi
+
+echo ""
+echo "  ✅ Setup complete! Launching CLI wizard..."
+echo ""
+
+# 5. Launch the interactive CLI wizard
 exec uv run python -m src.cli
