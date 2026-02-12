@@ -106,7 +106,21 @@ class TTSSkill(BaseSkill):
             )
 
         except Exception as e:
-            logger.error(f"TTS failed: {e}")
+            err_str = str(e)
+            logger.error(f"TTS failed: {err_str}")
+
+            # Clean error for terms acceptance
+            if "model_terms_required" in err_str:
+                return SkillResult(
+                    error=(
+                        "🎙️ TTS model requires terms acceptance.\n\n"
+                        "Go to: console.groq.com → Settings → Models\n"
+                        "Find 'Orpheus V1 English' and click Accept.\n\n"
+                        "Or visit the playground and generate once:\n"
+                        "https://console.groq.com/playground?model=canopylabs%2Forpheus-v1-english"
+                    )
+                )
+
             return SkillResult(error=f"TTS generation failed: {e}")
 
     @classmethod
