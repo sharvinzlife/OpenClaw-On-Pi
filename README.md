@@ -93,37 +93,36 @@ OpenClaw is a **production-ready AI chatbot** that runs on your Raspberry Pi and
 ### One-Command Setup (Recommended)
 
 ```bash
-# Clone the repository
 git clone https://github.com/sharvinzlife/OpenClaw-On-Pi.git
 cd OpenClaw-On-Pi
-
-# Run setup — installs uv, dependencies, and launches the CLI wizard
 ./setup
 ```
 
-The setup wizard will guide you through configuring API keys with a menu-based selector:
+That's it. `./setup` will:
+1. Install [uv](https://docs.astral.sh/uv/) (fast Python package manager) if not present
+2. Install all dependencies via `uv sync`
+3. Launch the interactive CLI wizard to configure API keys
 
+Then start the bot:
+
+```bash
+./start
 ```
-  🔑 Configure API Keys
-  
-  Which key would you like to configure?
-  
-  [1] 🤖 Telegram Bot Token     (Get from @BotFather)
-  [2] ⚡ Groq API Key            (Get from console.groq.com)
-  [3] ☁️  Ollama Cloud API Key    (Get from ollama.com/account)
-  [4] 🔙 Back to main menu
-```
+
+The dashboard will be available at `http://your-pi-ip:8080`
 
 ### Management Scripts
 
 ```bash
-./start     # Start the bot (foreground)
-./stop      # Stop the running bot
-./restart   # Restart the bot
-./setup     # Re-run setup wizard
+./setup     # 🔧 First-time setup + CLI wizard
+./start     # 🚀 Start the bot + dashboard
+./stop      # 🛑 Stop everything
+./restart   # 🔄 Restart the bot
 ```
 
 ### Manual Installation
+
+If you prefer to set things up manually:
 
 ```bash
 # 1. Clone
@@ -138,6 +137,8 @@ uv sync
 
 # 4. Configure API keys via CLI wizard
 uv run python -m src.cli
+# → Select [2] Configure API keys
+# → Add Telegram token, Groq key, and optionally Ollama Cloud key
 
 # 5. Add yourself as admin
 nano config/permissions.yaml  # Add your Telegram user ID
@@ -268,14 +269,39 @@ admins:
 
 ---
 
-## 🎮 CLI Commands
+## 🎮 CLI & Management
 
-```bash
-./setup              # 🔧 First-time setup wizard
-./start              # 🚀 Start the bot
-./stop               # 🛑 Stop the bot
-./restart            # 🔄 Restart the bot
-```
+### Shell Scripts
+
+| Command | Description |
+|---------|-------------|
+| `./setup` | 🔧 First-time setup — launches the interactive CLI wizard |
+| `./start` | 🚀 Start the bot + dashboard (kills any existing instance) |
+| `./stop` | 🛑 Stop the bot and free port 8080 |
+| `./restart` | 🔄 Restart the bot (stop + start) |
+
+### Interactive CLI Wizard (`./setup`)
+
+The CLI wizard provides a full menu-driven interface:
+
+| Option | Description |
+|--------|-------------|
+| `[1]` 🚀 Start the bot | Launch bot with startup sequence |
+| `[2]` �� Configure API keys | Menu-based key selector with links to get keys |
+| `[3]` 🔒 Edit permissions | Manage admin/user Telegram IDs |
+| `[4]` ⚙️ Check status | Verify config, API keys, and provider health |
+| `[5]` 🧪 Run tests | Execute property-based test suite |
+| `[6]` 🌐 Start dashboard only | Launch web dashboard without the bot |
+
+### API Key Configuration
+
+The key configurator shows status for each key and provides direct links:
+
+| Key | Where to Get |
+|-----|-------------|
+| 🤖 Telegram Bot Token | [@BotFather](https://t.me/BotFather) on Telegram |
+| ⚡ Groq API Key | [console.groq.com/keys](https://console.groq.com/keys) |
+| 🔑 Ollama Cloud API Key | [ollama.com/settings/keys](https://ollama.com/settings/keys) |
 
 ### CLI Preview
 
