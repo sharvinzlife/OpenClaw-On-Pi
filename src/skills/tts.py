@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 # Curated voice presets (Edge TTS short names)
 VOICES = {
+    # English
     "guy": ("en-US-GuyNeural", "Guy (male, US default)"),
     "jenny": ("en-US-JennyNeural", "Jenny (female, US)"),
     "aria": ("en-US-AriaNeural", "Aria (female, US)"),
@@ -23,9 +24,29 @@ VOICES = {
     "sonia": ("en-GB-SoniaNeural", "Sonia (female, British)"),
     "natasha": ("en-AU-NatashaNeural", "Natasha (female, Australian)"),
     "william": ("en-AU-WilliamNeural", "William (male, Australian)"),
-    "neerja": ("en-IN-NeerjaNeural", "Neerja (female, Indian)"),
     "connor": ("en-IE-ConnorNeural", "Connor (male, Irish)"),
     "clara": ("en-CA-ClaraNeural", "Clara (female, Canadian)"),
+    # Malayalam 🇮🇳
+    "midhun": ("ml-IN-MidhunNeural", "Midhun (male, Malayalam)"),
+    "sobhana": ("ml-IN-SobhanaNeural", "Sobhana (female, Malayalam)"),
+    # Tamil ��🇳
+    "pallavi": ("ta-IN-PallaviNeural", "Pallavi (female, Tamil)"),
+    "valluvar": ("ta-IN-ValluvarNeural", "Valluvar (male, Tamil)"),
+    # Hindi 🇮🇳
+    "swara": ("hi-IN-SwaraNeural", "Swara (female, Hindi)"),
+    "madhur": ("hi-IN-MadhurNeural", "Madhur (male, Hindi)"),
+    # English (India) 🇮🇳
+    "neerja": ("en-IN-NeerjaNeural", "Neerja (female, English-India)"),
+    "prabhat": ("en-IN-PrabhatNeural", "Prabhat (male, English-India)"),
+    # Telugu 🇮🇳
+    "shruti": ("te-IN-ShrutiNeural", "Shruti (female, Telugu)"),
+    "mohan": ("te-IN-MohanNeural", "Mohan (male, Telugu)"),
+    # Kannada 🇮🇳
+    "sapna": ("kn-IN-SapnaNeural", "Sapna (female, Kannada)"),
+    "gagan": ("kn-IN-GaganNeural", "Gagan (male, Kannada)"),
+    # Bengali 🇮🇳
+    "tanishaa": ("bn-IN-TanishaaNeural", "Tanishaa (female, Bengali)"),
+    "bashkar": ("bn-IN-BashkarNeural", "Bashkar (male, Bengali)"),
 }
 
 # Groq Orpheus voices (used when engine=groq)
