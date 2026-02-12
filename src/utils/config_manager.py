@@ -21,6 +21,8 @@ class AppConfig:
     groq_api_key: str = ""
     ollama_cloud_url: Optional[str] = None
     ollama_api_key: Optional[str] = None
+    reddit_client_id: Optional[str] = None
+    reddit_client_secret: Optional[str] = None
     
     # Bot settings from config.yaml
     default_provider: str = "groq"
@@ -176,6 +178,8 @@ class ConfigManager:
             groq_api_key=os.getenv("GROQ_API_KEY", ""),
             ollama_cloud_url=os.getenv("OLLAMA_CLOUD_URL") or None,
             ollama_api_key=os.getenv("OLLAMA_API_KEY") or None,
+            reddit_client_id=os.getenv("REDDIT_CLIENT_ID") or None,
+            reddit_client_secret=os.getenv("REDDIT_CLIENT_SECRET") or None,
             # Bot settings
             default_provider=bot.get("default_provider", "groq"),
             default_model=bot.get("default_model", "llama-3.1-70b-versatile"),

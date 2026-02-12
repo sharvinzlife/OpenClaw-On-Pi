@@ -47,3 +47,8 @@ skills:
   translate:
     enabled: true
     api_base_url: https://libretranslate.com
+
+  reddit:
+    enabled: true
+    max_results: 5
+    # client_id and client_secret loaded from .env at runtime

@@ -438,6 +438,24 @@ KEYS_CONFIG = [
         "link": "",
         "prompt": "URL",
     },
+    {
+        "key": "REDDIT_CLIENT_ID",
+        "label": "Reddit Client ID",
+        "icon": "🔴",
+        "color_attr": "NEON_ORANGE",
+        "hint": "Create a script app on Reddit",
+        "link": "https://www.reddit.com/prefs/apps",
+        "prompt": "Client ID",
+    },
+    {
+        "key": "REDDIT_CLIENT_SECRET",
+        "label": "Reddit Client Secret",
+        "icon": "🔴",
+        "color_attr": "NEON_ORANGE",
+        "hint": "The secret from your Reddit app",
+        "link": "https://www.reddit.com/prefs/apps",
+        "prompt": "Client Secret",
+    },
 ]
 
 
@@ -660,7 +678,7 @@ def check_status():
                     break
             icon = f"{C.NEON_GREEN}●{C.END}" if has_value else f"{C.NEON_YELLOW}●{C.END}"
             state = f"{C.NEON_GREEN}Configured{C.END}" if has_value else f"{C.NEON_YELLOW}Not set{C.END}"
-            opt = f" {C.DIM}(optional){C.END}" if key in ("OLLAMA_CLOUD_URL", "OLLAMA_API_KEY") else ""
+            opt = f" {C.DIM}(optional){C.END}" if key in ("OLLAMA_CLOUD_URL", "OLLAMA_API_KEY", "REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET") else ""
             print(f"    {icon} {name}: {state}{opt}")
             time.sleep(0.05)
     

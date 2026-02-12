@@ -145,6 +145,15 @@ async def main() -> None:
     # Load skills configuration and initialize skill registry
     skills_config_data = config_manager.load_yaml("skills.yaml")
     skills_config = skills_config_data.get("skills", {})
+
+    # Inject Reddit credentials from .env into skill config
+    if "reddit" not in skills_config:
+        skills_config["reddit"] = {"enabled": True}
+    if app_config.reddit_client_id:
+        skills_config["reddit"]["client_id"] = app_config.reddit_client_id
+    if app_config.reddit_client_secret:
+        skills_config["reddit"]["client_secret"] = app_config.reddit_client_secret
+
     skill_registry = SkillRegistry(skills_config, command_router)
     skill_registry.discover_and_load()
     loaded_count = len(skill_registry.skills)
