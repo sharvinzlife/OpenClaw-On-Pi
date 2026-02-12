@@ -55,8 +55,8 @@ skills:
 
   tts:
     enabled: true
-    default_voice: troy
-    model: canopylabs/orpheus-v1-english
+    default_voice: guy  # Edge TTS voices: guy, jenny, aria, davis, ryan, sonia, natasha, william, neerja, connor, clara
+    groq_model: canopylabs/orpheus-v1-english  # Used when voice:troy/tara/etc requested
     temp_dir: /tmp/openclaw_tts
 
   transcribe:
