@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/sharvinzlife/OpenClaw-On-Pi/main/assets/logo.png" alt="OpenClaw Logo" width="200"/>
+  <img src="assets/logo.png" alt="OpenClaw Logo" width="200"/>
 </p>
 
 <h1 align="center">🤖 OpenClaw-On-Pi</h1>
@@ -71,6 +71,14 @@ OpenClaw is a **production-ready AI chatbot** that runs on your Raspberry Pi and
 | 📝 **Audit Logging** | Complete activity tracking with PII redaction |
 | 🎨 **Professional CLI** | Colorful interface with emojis |
 | 🧪 **50 Property Tests** | Comprehensive test coverage with Hypothesis |
+
+---
+
+## 🎬 CLI Preview
+
+<p align="center">
+  <img src="assets/cli_preview.gif" alt="OpenClaw CLI Preview" width="700"/>
+</p>
 
 ---
 
@@ -271,27 +279,9 @@ admins:
 
 ### CLI Preview
 
-```
-   ██████╗ ██████╗ ███████╗███╗   ██╗ ██████╗██╗      █████╗ ██╗    ██╗
-  ██╔═══██╗██╔══██╗██╔════╝████╗  ██║██╔════╝██║     ██╔══██╗██║    ██║
-  ██║   ██║██████╔╝█████╗  ██╔██╗ ██║██║     ██║     ███████║██║ █╗ ██║
-  ██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║██║     ██║     ██╔══██║██║███╗██║
-  ╚██████╔╝██║     ███████╗██║ ╚████║╚██████╗███████╗██║  ██║╚███╔███╔╝
-   ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝ ╚═════╝╚══════╝╚═╝  ╚═╝ ╚══╝╚══╝
-
-                    AI-Powered Telegram Bot
-        🧠 Groq  ☁️ Ollama Cloud  🖥️ Local Ollama
-
-  What would you like to do?
-
-  [1] 🚀 Start the bot
-  [2] 🔑 Configure API keys
-  [3] 🔒 Edit permissions
-  [4] ⚙️ Check status
-  [5] ✅ Run tests
-  [6] 🔗 Start dashboard only
-  [q] Quit
-```
+<p align="center">
+  <img src="assets/cli_preview.png" alt="OpenClaw CLI" width="600"/>
+</p>
 
 ---
 
